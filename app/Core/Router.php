@@ -12,7 +12,7 @@ class Router {
 
         // 1. Verificar si el controlador existe
         $controllerName = ucfirst($url[0] ?? $this->controller);
-        $controllerFile = '../app/Controllers/' . $controllerName . '.php';
+        $controllerFile = APPROOT . '/app/Controllers/' . $controllerName . '.php';
 
         if (file_exists($controllerFile)) {
             $this->controller = $controllerName;
@@ -20,7 +20,7 @@ class Router {
         }
 
         // Incluir y crear la instancia del controlador
-        require_once '../app/Controllers/' . $this->controller . '.php';
+        require_once APPROOT . '/app/Controllers/' . $this->controller . '.php';
         $fullControllerName = 'App\\Controllers\\' . $this->controller;
         $this->controller = new $fullControllerName;
 
