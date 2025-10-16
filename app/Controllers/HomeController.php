@@ -1,11 +1,16 @@
 <?php
-
 namespace App\Controllers;
 
-class HomeController {
+use App\Core\BaseController;
+
+class HomeController extends BaseController {
+
     public function index() {
-        echo "<h1>¡Bienvenido a la página principal!</h1>";
-        echo "<p>El enrutador está funcionando y ha cargado el HomeController.</p>";
+        $data = [
+            'titulo' => '¡Bienvenido a Veterinaria Reino Animal!',
+            'descripcion' => 'Sistema de gestión de calidad funcionando.'
+        ];
+        $this->view('home/index', $data);
     }
 
     public function saludo($nombre = 'invitado') {
