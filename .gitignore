@@ -1,0 +1,17 @@
+# Ignorar la carpeta de dependencias de Composer
+/vendor/
+
+# Ignorar archivos de configuración con datos sensibles
+# Copia config.example.php a config.php (que estará ignorado)
+config/config.php
+config/firebase_credentials.json
+
+# Ignorar archivos de IDE y sistema operativo
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Ignorar archivos de logs y temporales
+*.log
+temp/

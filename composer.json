@@ -1,0 +1,18 @@
+{
+    "name": "thiag/veterinaria_cs_g4",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Thiag\\VeterinariaCsG4\\": "app/"
+        }
+    },
+    "authors": [
+        {
+            "name": "thiagosa"
+        }
+    ],
+    "require-dev": {
+        "phpunit/phpunit": "10.5"
+    }
+}
