@@ -6,8 +6,8 @@ use App\Core\Database;
 class ClienteModel {
     private $db;
 
-    public function __construct() {
-        $this->db = new Database();
+    public function __construct(?Database $database = null) {
+        $this->db = $database ?? new Database();
     }
 
     public function obtenerTodos() {
