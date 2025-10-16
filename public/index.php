@@ -1,13 +1,15 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Página de Inicio - Reino Animal</title>
-</head>
-<body>
-    <h1><?php echo $titulo; ?></h1>
-    <p><?php echo $descripcion; ?></p>
-    <p>Esta página se ha cargado a través de nuestro sistema MVC.</p>
-</body>
-</html>
+<?php
+// Iniciar la sesión
+session_start();
+
+// Definir la ruta raíz del proyecto para usarla en toda la aplicación
+define('APPROOT', dirname(dirname(__FILE__)));
+
+// Cargar el autoloader de Composer
+require_once APPROOT . '/vendor/autoload.php';
+
+// Cargar el archivo de configuración
+require_once APPROOT . '/config/config.php';
+
+// Iniciar el enrutador para que maneje la petición
+$router = new App\Core\Router();
