@@ -54,4 +54,45 @@ class ClienteController extends BaseController {
             }
         }
     }
+
+    /**
+     * Muestra el formulario de edición.
+     */
+    public function editar($id) {
+        $cliente = $this->clienteModel->obtenerPorId((int)$id);
+        if (!$cliente) { die('Cliente no encontrado'); }
+        $data = [ 'titulo' => 'Editar Cliente', 'cliente' => $cliente ];
+        $this->view('clientes/editar', $data);
+    }
+
+    /**
+     * Procesa la actualización del cliente.
+     */
+    public function actualizar($id) {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $datos = [
+                'dni' => trim($_POST['dni']),
+                'nombre' => trim($_POST['nombre']),
+                'apellido' => trim($_POST['apellido']),
+                'telefono' => trim($_POST['telefono']),
+                'email' => trim($_POST['email']),
+            ];
+            if ($this->clienteModel->actualizar((int)$id, $datos)) {
+                header('Location: ' . APP_URL . '/cliente');
+            } else {
+                die('Algo salió mal al actualizar el cliente.');
+            }
+        }
+    }
+
+    /**
+     * Elimina un cliente.
+     */
+    public function eliminar($id) {
+        if ($this->clienteModel->eliminar((int)$id)) {
+            header('Location: ' . APP_URL . '/cliente');
+        } else {
+            die('No se pudo eliminar el cliente.');
+        }
+    }
 }

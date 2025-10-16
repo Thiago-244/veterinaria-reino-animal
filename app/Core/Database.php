@@ -45,4 +45,12 @@ class Database {
 
     public function execute() { return $this->stmt->execute(); }
     public function resultSet() { $this->execute(); return $this->stmt->fetchAll(); }
+
+    // Transacciones
+    public function beginTransaction() { return $this->dbh->beginTransaction(); }
+    public function commit() { return $this->dbh->commit(); }
+    public function rollBack() { return $this->dbh->rollBack(); }
+
+    // Accesos útiles
+    public function lastInsertId() { return $this->dbh->lastInsertId(); }
 }

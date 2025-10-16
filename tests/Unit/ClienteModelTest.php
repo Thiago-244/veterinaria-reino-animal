@@ -39,6 +39,19 @@ class ClienteModelTest extends TestCase {
         $this->assertEquals('12345678', $fakeDb->bindings[':dni']);
         $this->assertNotEmpty($fakeDb->queries);
     }
+
+    public function testActualizarAndEliminarCallsExecute() {
+        $fakeDb = new FakeDatabase();
+        $model = new ClienteModel($fakeDb);
+        $this->assertTrue($model->actualizar(1, [
+            'dni' => '11112222',
+            'nombre' => 'Ana',
+            'apellido' => 'Lopez',
+            'telefono' => '999',
+            'email' => 'ana@example.com'
+        ]));
+        $this->assertTrue($model->eliminar(1));
+    }
 }
 
 
