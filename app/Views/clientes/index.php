@@ -1,4 +1,4 @@
-<?php require APPROOT . '/views/layouts/header.php'; ?>
+<?php require APPROOT . '/Views/layouts/header.php'; ?>
 
 <h1><?php echo htmlspecialchars($titulo); ?></h1>
 
@@ -23,4 +23,4 @@
     </tbody>
 </table>
 
-<?php require APPROOT . '/views/layouts/footer.php'; ?>
+<?php require APPROOT . '/Views/layouts/footer.php'; ?>
