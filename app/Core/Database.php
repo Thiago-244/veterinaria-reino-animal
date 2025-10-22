@@ -45,6 +45,7 @@ class Database {
 
     public function execute() { return $this->stmt->execute(); }
     public function resultSet() { $this->execute(); return $this->stmt->fetchAll(); }
+    public function single() { $this->execute(); return $this->stmt->fetch(); }
 
     // Transacciones
     public function beginTransaction() { return $this->dbh->beginTransaction(); }

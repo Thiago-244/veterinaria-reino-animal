@@ -195,4 +195,63 @@ class MascotaModel {
         $edad = $hoy->diff($nacimiento);
         return $edad->y;
     }
+
+    /**
+     * Busca mascotas por término
+     */
+    public function buscarMascotas(string $termino) {
+        $this->db->query("
+            SELECT 
+                m.id, m.codigo, m.nombre, m.fecha_nacimiento, m.sexo,
+                c.nombre as cliente_nombre, c.apellido as cliente_apellido,
+                r.nombre as raza_nombre, e.nombre as especie_nombre
+            FROM mascotas m
+            JOIN clientes c ON m.id_cliente = c.id
+            JOIN razas r ON m.id_raza = r.id
+            JOIN especies e ON r.id_especie = e.id
+            WHERE m.nombre LIKE :termino 
+            OR m.codigo LIKE :termino
+            OR c.nombre LIKE :termino 
+            OR c.apellido LIKE :termino
+            OR c.dni LIKE :termino
+            OR r.nombre LIKE :termino
+            OR e.nombre LIKE :termino
+            ORDER BY m.nombre ASC
+        ");
+        $this->db->bind(':termino', '%' . $termino . '%');
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Obtiene mascotas por especie
+     */
+    public function obtenerMascotasPorEspecie(int $id_especie) {
+        $this->db->query("
+            SELECT 
+                m.id, m.codigo, m.nombre, m.fecha_nacimiento, m.sexo,
+                c.nombre as cliente_nombre, c.apellido as cliente_apellido,
+                r.nombre as raza_nombre
+            FROM mascotas m
+            JOIN clientes c ON m.id_cliente = c.id
+            JOIN razas r ON m.id_raza = r.id
+            WHERE r.id_especie = :id_especie
+            ORDER BY m.nombre ASC
+        ");
+        $this->db->bind(':id_especie', $id_especie);
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Obtiene estadísticas de mascotas
+     */
+    public function obtenerEstadisticas() {
+        $this->db->query("
+            SELECT 
+                COUNT(*) as total_mascotas,
+                COUNT(CASE WHEN sexo = 'Macho' THEN 1 END) as machos,
+                COUNT(CASE WHEN sexo = 'Hembra' THEN 1 END) as hembras
+            FROM mascotas
+        ");
+        return $this->db->single();
+    }
 }
