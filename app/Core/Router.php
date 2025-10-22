@@ -51,7 +51,15 @@ class Router {
         }
 
         if (isset($url[1])) {
-            if (method_exists($this->controller, $url[1])) {
+            // Convertir guiones a camelCase para nombres de métodos
+            $methodName = str_replace('-', '', ucwords($url[1], '-'));
+            $methodName = lcfirst($methodName);
+            
+            if (method_exists($this->controller, $methodName)) {
+                $this->method = $methodName;
+                unset($url[1]);
+            } elseif (method_exists($this->controller, $url[1])) {
+                // Fallback: intentar con el nombre original
                 $this->method = $url[1];
                 unset($url[1]);
             }
