@@ -240,6 +240,11 @@ class ApiDetalleTempController extends BaseController {
         }
     }
 
+    // DELETE /apidetalletemp/vaciar-carrito/{token_usuario} - Alias con guiones
+    public function vaciar_carrito($token_usuario) {
+        return $this->vaciarCarrito($token_usuario);
+    }
+
     // DELETE /apidetalletemp/eliminar-producto/{id_producto}/{token_usuario}
     public function eliminarProducto($id_producto, $token_usuario) {
         if ($_SERVER['REQUEST_METHOD'] !== 'DELETE' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -257,6 +262,11 @@ class ApiDetalleTempController extends BaseController {
         }
     }
 
+    // DELETE /apidetalletemp/eliminar-producto/{id_producto}/{token_usuario} - Alias con guiones
+    public function eliminar_producto($id_producto, $token_usuario) {
+        return $this->eliminarProducto($id_producto, $token_usuario);
+    }
+
     // GET /apidetalletemp/total-items/{token_usuario}
     public function totalItems($token_usuario) {
         if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
@@ -269,6 +279,11 @@ class ApiDetalleTempController extends BaseController {
         echo json_encode(['total_items' => $totalItems]);
     }
 
+    // GET /apidetalletemp/total-items/{token_usuario} - Alias con guiones
+    public function total_items($token_usuario) {
+        return $this->totalItems($token_usuario);
+    }
+
     // GET /apidetalletemp/total-carrito/{token_usuario}
     public function totalCarrito($token_usuario) {
         if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
@@ -279,6 +294,11 @@ class ApiDetalleTempController extends BaseController {
         
         $totalCarrito = $this->detalleTempModel->obtenerTotalCarrito($token_usuario);
         echo json_encode(['total_carrito' => $totalCarrito]);
+    }
+
+    // GET /apidetalletemp/total-carrito/{token_usuario} - Alias con guiones
+    public function total_carrito($token_usuario) {
+        return $this->totalCarrito($token_usuario);
     }
 
     // GET /apidetalletemp/estadisticas/{token_usuario}
@@ -306,6 +326,11 @@ class ApiDetalleTempController extends BaseController {
         echo json_encode(['data' => $productos]);
     }
 
+    // GET /apidetalletemp/productos-mas-agregados - Alias con guiones
+    public function productos_mas_agregados() {
+        return $this->productosMasAgregados();
+    }
+
     // POST /apidetalletemp/limpiar-antiguos
     public function limpiarAntiguos() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -321,5 +346,10 @@ class ApiDetalleTempController extends BaseController {
             http_response_code(500);
             echo json_encode(['error' => 'No se pudieron limpiar los detalles antiguos']);
         }
+    }
+
+    // POST /apidetalletemp/limpiar-antiguos - Alias con guiones
+    public function limpiar_antiguos() {
+        return $this->limpiarAntiguos();
     }
 }
