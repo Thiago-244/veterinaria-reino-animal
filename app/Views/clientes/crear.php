@@ -20,6 +20,10 @@
         <input type="text" id="telefono" name="telefono" required>
     </div>
     <div class="form-group">
+        <label for="direccion">Dirección:</label>
+        <input type="text" id="direccion" name="direccion">
+    </div>
+    <div class="form-group">
         <label for="email">Email:</label>
         <input type="email" id="email" name="email">
     </div>

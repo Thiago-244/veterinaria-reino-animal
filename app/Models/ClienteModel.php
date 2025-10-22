@@ -11,7 +11,7 @@ class ClienteModel {
     }
 
     public function obtenerTodos() {
-        $this->db->query("SELECT id, dni, nombre, apellido, telefono FROM clientes ORDER BY nombre ASC");
+        $this->db->query("SELECT id, dni, nombre, apellido, telefono, direccion, email, foto, created_at FROM clientes ORDER BY nombre ASC");
         return $this->db->resultSet();
     }
 
@@ -41,14 +41,16 @@ class ClienteModel {
      * Inserta un nuevo cliente en la base de datos.
      */
     public function crear($datos) {
-        $this->db->query("INSERT INTO clientes (dni, nombre, apellido, telefono, email) VALUES (:dni, :nombre, :apellido, :telefono, :email)");
+        $this->db->query("INSERT INTO clientes (dni, nombre, apellido, telefono, direccion, email, foto) VALUES (:dni, :nombre, :apellido, :telefono, :direccion, :email, :foto)");
 
         // Vincular los valores para evitar inyección SQL
         $this->db->bind(':dni', $datos['dni']);
         $this->db->bind(':nombre', $datos['nombre']);
         $this->db->bind(':apellido', $datos['apellido']);
         $this->db->bind(':telefono', $datos['telefono']);
-        $this->db->bind(':email', $datos['email']);
+        $this->db->bind(':direccion', $datos['direccion'] ?? null);
+        $this->db->bind(':email', $datos['email'] ?? null);
+        $this->db->bind(':foto', $datos['foto'] ?? 'default_avatar.png');
 
         // Ejecutar y devolver true si fue exitoso
         if ($this->db->execute()) {
@@ -59,12 +61,14 @@ class ClienteModel {
     }
 
     public function actualizar(int $id, array $datos) {
-        $this->db->query("UPDATE clientes SET dni = :dni, nombre = :nombre, apellido = :apellido, telefono = :telefono, email = :email WHERE id = :id");
+        $this->db->query("UPDATE clientes SET dni = :dni, nombre = :nombre, apellido = :apellido, telefono = :telefono, direccion = :direccion, email = :email, foto = :foto WHERE id = :id");
         $this->db->bind(':dni', $datos['dni']);
         $this->db->bind(':nombre', $datos['nombre']);
         $this->db->bind(':apellido', $datos['apellido']);
         $this->db->bind(':telefono', $datos['telefono']);
-        $this->db->bind(':email', $datos['email']);
+        $this->db->bind(':direccion', $datos['direccion'] ?? null);
+        $this->db->bind(':email', $datos['email'] ?? null);
+        $this->db->bind(':foto', $datos['foto'] ?? 'default_avatar.png');
         $this->db->bind(':id', $id);
         return $this->db->execute();
     }

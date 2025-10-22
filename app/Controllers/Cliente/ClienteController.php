@@ -1,5 +1,5 @@
 <?php
-namespace App\Controllers;
+namespace App\Controllers\Cliente;
 
 use App\Core\BaseController;
 
@@ -42,7 +42,8 @@ class ClienteController extends BaseController {
                 'nombre' => trim($_POST['nombre']),
                 'apellido' => trim($_POST['apellido']),
                 'telefono' => trim($_POST['telefono']),
-                'email' => trim($_POST['email']),
+                'direccion' => trim($_POST['direccion'] ?? ''),
+                'email' => trim($_POST['email'] ?? ''),
             ];
 
             // 2. Llamar al método del modelo para guardar
@@ -75,7 +76,8 @@ class ClienteController extends BaseController {
                 'nombre' => trim($_POST['nombre']),
                 'apellido' => trim($_POST['apellido']),
                 'telefono' => trim($_POST['telefono']),
-                'email' => trim($_POST['email']),
+                'direccion' => trim($_POST['direccion'] ?? ''),
+                'email' => trim($_POST['email'] ?? ''),
             ];
             if ($this->clienteModel->actualizar((int)$id, $datos)) {
                 header('Location: ' . APP_URL . '/cliente');

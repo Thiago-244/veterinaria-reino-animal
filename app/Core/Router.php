@@ -9,17 +9,46 @@ class Router {
     public function __construct() {
         $url = $this->parseUrl();
 
+        // Determinar el controlador y su ubicación
         $controllerName = !empty($url[0]) ? ucwords($url[0]) . 'Controller' : 'HomeController';
-        $controllerFile = APPROOT . '/app/Controllers/' . $controllerName . '.php';
+        
+        // Manejar prefijos como "api"
+        $moduleName = '';
+        $actualControllerName = $controllerName;
+        
+        if (!empty($url[0])) {
+            $firstSegment = $url[0];
+            if (strpos($firstSegment, 'api') === 0) {
+                // Para URLs como "apicliente", extraer "cliente"
+                $moduleName = str_replace('api', '', $firstSegment);
+                $actualControllerName = 'Api' . ucwords($moduleName) . 'Controller';
+            } else {
+                $moduleName = $firstSegment;
+            }
+        }
+        
+        $controllerFile = '';
+        $controllerNamespace = '';
+        
+        if ($moduleName && file_exists(APPROOT . '/app/Controllers/' . ucwords($moduleName) . '/' . $actualControllerName . '.php')) {
+            // Controlador en subcarpeta de módulo
+            $controllerFile = APPROOT . '/app/Controllers/' . ucwords($moduleName) . '/' . $actualControllerName . '.php';
+            $controllerNamespace = 'App\\Controllers\\' . ucwords($moduleName) . '\\' . $actualControllerName;
+        } elseif (file_exists(APPROOT . '/app/Controllers/' . $actualControllerName . '.php')) {
+            // Controlador en carpeta raíz
+            $controllerFile = APPROOT . '/app/Controllers/' . $actualControllerName . '.php';
+            $controllerNamespace = 'App\\Controllers\\' . $actualControllerName;
+        }
 
-        if (file_exists($controllerFile)) {
-            $this->controller = $controllerName;
+        if ($controllerFile) {
+            $this->controller = $actualControllerName;
             unset($url[0]);
         }
 
-        require_once APPROOT . '/app/Controllers/' . $this->controller . '.php';
-        $fullControllerName = 'App\\Controllers\\' . $this->controller;
-        $this->controller = new $fullControllerName;
+        if ($controllerFile) {
+            require_once $controllerFile;
+            $this->controller = new $controllerNamespace;
+        }
 
         if (isset($url[1])) {
             if (method_exists($this->controller, $url[1])) {
