@@ -13,6 +13,29 @@ class ApiDetalleTempController extends BaseController {
         header('Content-Type: application/json; charset=utf-8');
     }
 
+    // Método index por defecto
+    public function index() {
+        http_response_code(200);
+        echo json_encode([
+            'message' => 'API DetalleTemp - Carrito Temporal',
+            'endpoints' => [
+                'GET /apidetalletemp/listar' => 'Listar todos los detalles temporales',
+                'POST /apidetalletemp/agregar' => 'Agregar producto al carrito',
+                'PUT /apidetalletemp/actualizar-cantidad/{id}' => 'Actualizar cantidad',
+                'DELETE /apidetalletemp/eliminar/{id}' => 'Eliminar del carrito',
+                'GET /apidetalletemp/obtener/{id}' => 'Obtener detalle por ID',
+                'GET /apidetalletemp/carrito/{token_usuario}' => 'Obtener carrito por token',
+                'DELETE /apidetalletemp/vaciar-carrito/{token_usuario}' => 'Vaciar carrito',
+                'DELETE /apidetalletemp/eliminar-producto/{id_producto}/{token_usuario}' => 'Eliminar producto específico',
+                'GET /apidetalletemp/total-items/{token_usuario}' => 'Total de items',
+                'GET /apidetalletemp/total-carrito/{token_usuario}' => 'Total del carrito',
+                'GET /apidetalletemp/estadisticas/{token_usuario}' => 'Estadísticas del carrito',
+                'GET /apidetalletemp/productos-mas-agregados' => 'Productos más agregados',
+                'POST /apidetalletemp/limpiar-antiguos' => 'Limpiar detalles antiguos'
+            ]
+        ]);
+    }
+
     // GET /apidetalletemp/listar
     public function listar() {
         if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
@@ -96,8 +119,8 @@ class ApiDetalleTempController extends BaseController {
         }
     }
 
-    // PUT /apidetalletemp/actualizar-cantidad/{id}
-    public function actualizarCantidad($id) {
+    // PUT /apidetalletemp/actualizar/{id}
+    public function actualizar($id) {
         if ($_SERVER['REQUEST_METHOD'] !== 'PUT' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
             echo json_encode(['error' => 'Método no permitido']);
@@ -134,6 +157,11 @@ class ApiDetalleTempController extends BaseController {
             http_response_code(500);
             echo json_encode(['error' => 'No se pudo actualizar la cantidad']);
         }
+    }
+
+    // PUT /apidetalletemp/actualizar-cantidad/{id} - Alias para compatibilidad
+    public function actualizarCantidad($id) {
+        return $this->actualizar($id);
     }
 
     // DELETE /apidetalletemp/eliminar/{id}
