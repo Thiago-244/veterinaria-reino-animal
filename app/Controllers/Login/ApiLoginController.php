@@ -13,6 +13,15 @@ class ApiLoginController extends BaseController {
     }
 
     /**
+     * Inicia la sesión solo si no está iniciada para evitar notices.
+     */
+    private function ensureSessionStarted() {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+    }
+
+    /**
      * POST /apilogin/autenticar
      * Autentica un usuario y devuelve información de sesión
      */
@@ -52,8 +61,8 @@ class ApiLoginController extends BaseController {
         $usuario = $this->loginModel->verificarCredenciales($email, $password);
 
         if ($usuario) {
-            // Iniciar sesión
-            session_start();
+            // Iniciar sesión (evitar doble inicio)
+            $this->ensureSessionStarted();
             $_SESSION['usuario_id'] = $usuario['id'];
             $_SESSION['usuario_nombre'] = $usuario['nombre'];
             $_SESSION['usuario_email'] = $usuario['email'];
@@ -89,9 +98,9 @@ class ApiLoginController extends BaseController {
             return;
         }
 
-        session_start();
+        $this->ensureSessionStarted();
         session_destroy();
-        session_start();
+        $this->ensureSessionStarted();
 
         echo json_encode([
             'success' => true,
@@ -110,7 +119,7 @@ class ApiLoginController extends BaseController {
             return;
         }
 
-        session_start();
+        $this->ensureSessionStarted();
 
         if (isset($_SESSION['usuario_id'])) {
             $usuario = $this->loginModel->obtenerUsuarioPorId($_SESSION['usuario_id']);
@@ -145,7 +154,7 @@ class ApiLoginController extends BaseController {
             return;
         }
 
-        session_start();
+        $this->ensureSessionStarted();
 
         if (!isset($_SESSION['usuario_id'])) {
             http_response_code(401);
@@ -202,7 +211,7 @@ class ApiLoginController extends BaseController {
             return;
         }
 
-        session_start();
+        $this->ensureSessionStarted();
 
         if (!isset($_SESSION['usuario_id'])) {
             http_response_code(401);
@@ -232,7 +241,7 @@ class ApiLoginController extends BaseController {
             return;
         }
 
-        session_start();
+        $this->ensureSessionStarted();
 
         if (!isset($_SESSION['usuario_id'])) {
             http_response_code(401);
