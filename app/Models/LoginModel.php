@@ -15,7 +15,7 @@ class LoginModel {
      */
     public function verificarCredenciales(string $email, string $password) {
         $this->db->query("
-            SELECT id, nombre, email, password, rol, estado, created_at, updated_at 
+            SELECT id, nombre, email, password, rol, estado 
             FROM usuarios 
             WHERE email = :email AND estado = 1
             LIMIT 1
@@ -47,7 +47,7 @@ class LoginModel {
      */
     public function obtenerUsuarioPorId(int $id) {
         $this->db->query("
-            SELECT id, nombre, email, rol, estado, created_at, updated_at 
+            SELECT id, nombre, email, rol, estado 
             FROM usuarios 
             WHERE id = :id 
             LIMIT 1
@@ -70,7 +70,8 @@ class LoginModel {
      * Actualiza la última sesión del usuario
      */
     public function actualizarUltimaSesion(int $id) {
-        $this->db->query("UPDATE usuarios SET updated_at = NOW() WHERE id = :id");
+        // La tabla `usuarios` actual no tiene columna updated_at; mantener compatibilidad con una consulta no destructiva
+        $this->db->query("UPDATE usuarios SET estado = estado WHERE id = :id");
         $this->db->bind(':id', $id);
         return $this->db->execute();
     }
@@ -89,7 +90,7 @@ class LoginModel {
         }
 
         // Actualizar contraseña
-        $this->db->query("UPDATE usuarios SET password = :password, updated_at = NOW() WHERE id = :id");
+        $this->db->query("UPDATE usuarios SET password = :password WHERE id = :id");
         $this->db->bind(':password', password_hash($nuevaPassword, PASSWORD_DEFAULT));
         $this->db->bind(':id', $id);
         
@@ -100,7 +101,7 @@ class LoginModel {
      * Resetea la contraseña (solo para administradores)
      */
     public function resetearPassword(int $id, string $nuevaPassword) {
-        $this->db->query("UPDATE usuarios SET password = :password, updated_at = NOW() WHERE id = :id");
+        $this->db->query("UPDATE usuarios SET password = :password WHERE id = :id");
         $this->db->bind(':password', password_hash($nuevaPassword, PASSWORD_DEFAULT));
         $this->db->bind(':id', $id);
         
@@ -149,10 +150,9 @@ class LoginModel {
      */
     public function obtenerUsuariosRecientes(int $limite = 10) {
         $this->db->query("
-            SELECT id, nombre, email, rol, created_at 
+            SELECT id, nombre, email, rol 
             FROM usuarios 
-            WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-            ORDER BY created_at DESC 
+            ORDER BY id DESC 
             LIMIT :limite
         ");
         $this->db->bind(':limite', $limite);
