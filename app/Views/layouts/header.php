@@ -4,15 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($titulo ?? 'Reino Animal'); ?></title>
-    <style>
-        body { font-family: sans-serif; margin: 0; background-color: #f4f4f9; }
-        .container { max-width: 900px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1 { color: #333; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #4CAF50; color: white; }
-        tr:nth-child(even) { background-color: #f2f2f2; }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="<?php echo APP_URL; ?>/css/app.css">
 </head>
 <body>
-    <div class="container">
+    <div class="app-shell">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar__brand">
+                <a href="<?php echo APP_URL; ?>/dashboard" class="brand">
+                    <span class="brand__logo">🩺</span>
+                    <span class="brand__name">Reino Animal</span>
+                </a>
+                <button class="sidebar__close" id="sidebarClose" aria-label="Cerrar menú">✕</button>
+            </div>
+            <nav class="sidebar__nav">
+                <a class="nav__item" href="<?php echo APP_URL; ?>/dashboard">🏠 Dashboard</a>
+                <div class="nav__section">Gestión</div>
+                <a class="nav__item" href="<?php echo APP_URL; ?>/cliente">👥 Clientes</a>
+                <a class="nav__item" href="<?php echo APP_URL; ?>/mascota">🐾 Mascotas</a>
+                <a class="nav__item" href="<?php echo APP_URL; ?>/cita">📅 Citas</a>
+                <a class="nav__item" href="<?php echo APP_URL; ?>/productoservicio">📦 Productos/Servicios</a>
+                <a class="nav__item" href="<?php echo APP_URL; ?>/venta">💰 Ventas</a>
+                <div class="nav__section">Catálogos</div>
+                <a class="nav__item" href="<?php echo APP_URL; ?>/especie">🧬 Especies</a>
+                <a class="nav__item" href="<?php echo APP_URL; ?>/raza">🐕 Razas</a>
+                <div class="nav__section">Sistema</div>
+                <a class="nav__item" href="<?php echo APP_URL; ?>/usuario">👤 Usuarios</a>
+                <a class="nav__item" href="<?php echo APP_URL; ?>/login/logout">🚪 Cerrar sesión</a>
+            </nav>
+            <div class="sidebar__footer">
+                <small>© <?php echo date('Y'); ?> Reino Animal</small>
+            </div>
+        </aside>
+
+        <div class="content">
+            <header class="topbar">
+                <button class="topbar__menu" id="sidebarOpen" aria-label="Abrir menú">☰</button>
+                <h1 class="topbar__title"><?php echo htmlspecialchars($titulo ?? ''); ?></h1>
+                <div class="topbar__actions">
+                    <button class="btn btn--ghost" id="themeToggle" title="Cambiar tema">🌓</button>
+                </div>
+            </header>
+
+            <main class="page">
