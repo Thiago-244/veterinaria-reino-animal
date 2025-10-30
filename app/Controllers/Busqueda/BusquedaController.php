@@ -3,6 +3,7 @@
 namespace App\Controllers\Busqueda;
 
 use App\Core\BaseController;
+use App\Core\Database;
 use App\Models\ClienteModel;
 use App\Models\MascotaModel;
 use App\Models\VentaModel;
@@ -10,6 +11,7 @@ use App\Models\ProductoServicioModel;
 use App\Models\CitaModel;
 
 class BusquedaController extends BaseController {
+    private $db;
     private $clienteModel;
     private $mascotaModel;
     private $ventaModel;
@@ -71,7 +73,7 @@ class BusquedaController extends BaseController {
 
     private function buscarVentas(string $termino) {
         // Buscar ventas por cliente o usuario
-        $this->db = new \App\Core\Database();
+        if (!$this->db) { $this->db = new Database(); }
         $this->db->query("
             SELECT 
                 v.id, v.total, v.creado_en,
@@ -92,7 +94,7 @@ class BusquedaController extends BaseController {
 
     private function buscarCitas(string $termino) {
         // Buscar citas por mascota, cliente o motivo
-        $this->db = new \App\Core\Database();
+        if (!$this->db) { $this->db = new Database(); }
         $this->db->query("
             SELECT 
                 c.id, c.codigo, c.fecha_cita, c.motivo, c.estado,

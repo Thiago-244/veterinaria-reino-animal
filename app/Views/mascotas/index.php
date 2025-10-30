@@ -1,9 +1,9 @@
 <?php require APPROOT . '/app/views/layouts/header.php'; ?>
 
 <h1><?php echo htmlspecialchars($titulo); ?></h1>
-<a href="<?php echo APP_URL; ?>/mascota/crear" class="btn-nuevo">Añadir Nueva Mascota</a>
+<a href="<?php echo APP_URL; ?>/mascota/crear" class="btn btn--success mb-3">Añadir Nueva Mascota</a>
 
-<table>
+<table class="table">
     <thead>
         <tr>
             <th>Código</th>
@@ -21,71 +21,27 @@
                 <td><?php echo htmlspecialchars($mascota['codigo']); ?></td>
                 <td><?php echo htmlspecialchars($mascota['nombre']); ?></td>
                 <td><?php echo htmlspecialchars($mascota['cliente_nombre'] . ' ' . $mascota['cliente_apellido']); ?></td>
-                <td><?php echo htmlspecialchars($mascota['especie_nombre'] . ' - ' . $mascota['raza_nombre']); ?></td>
-                <td><?php echo htmlspecialchars($mascota['sexo']); ?></td>
+                <td><span class="badge badge--info"><?php echo htmlspecialchars($mascota['especie_nombre'] . ' - ' . $mascota['raza_nombre']); ?></span></td>
+                <td><span class="badge badge--dark"><?php echo htmlspecialchars($mascota['sexo']); ?></span></td>
                 <td>
                     <?php 
                     if ($mascota['fecha_nacimiento']) {
                         $nacimiento = new DateTime($mascota['fecha_nacimiento']);
                         $hoy = new DateTime();
                         $edad = $hoy->diff($nacimiento);
-                        echo $edad->y . ' años';
+                        echo '<span class="badge badge--success">' . $edad->y . ' años</span>';
                     } else {
-                        echo 'N/A';
+                        echo '<span class="badge badge--warn">N/A</span>';
                     }
                     ?>
                 </td>
                 <td>
-                    <a href="<?php echo APP_URL; ?>/mascota/editar/<?php echo (int)$mascota['id']; ?>">Editar</a>
-                    |
-                    <a href="<?php echo APP_URL; ?>/mascota/eliminar/<?php echo (int)$mascota['id']; ?>" onclick="return confirm('¿Eliminar mascota?');">Eliminar</a>
+                    <a href="<?php echo APP_URL; ?>/mascota/editar/<?php echo (int)$mascota['id']; ?>" class="badge badge--info">Editar</a>
+                    <a href="<?php echo APP_URL; ?>/mascota/eliminar/<?php echo (int)$mascota['id']; ?>" class="badge badge--danger" onclick="return confirm('¿Eliminar mascota?');">Eliminar</a>
                 </td>
             </tr>
         <?php endforeach; ?>
     </tbody>
 </table>
-
-<style>
-    .btn-nuevo {
-        display: inline-block;
-        margin-bottom: 20px;
-        padding: 10px 15px;
-        background-color: #28a745;
-        color: white;
-        text-decoration: none;
-        border-radius: 5px;
-        font-weight: bold;
-    }
-    
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-    }
-    
-    th, td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
-    }
-    
-    th {
-        background-color: #f2f2f2;
-        font-weight: bold;
-    }
-    
-    tr:nth-child(even) {
-        background-color: #f9f9f9;
-    }
-    
-    a {
-        color: #007bff;
-        text-decoration: none;
-    }
-    
-    a:hover {
-        text-decoration: underline;
-    }
-</style>
 
 <?php require APPROOT . '/app/views/layouts/footer.php'; ?>

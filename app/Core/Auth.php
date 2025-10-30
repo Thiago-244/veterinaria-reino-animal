@@ -19,7 +19,9 @@ class Auth {
      * Verifica si el usuario está autenticado
      */
     public static function check() {
-        session_start();
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
         return isset($_SESSION['usuario_id']) && 
                isset($_SESSION['usuario_email']) && 
                self::usuarioActivo();
@@ -181,7 +183,9 @@ class Auth {
      * Cierra la sesión del usuario
      */
     public static function logout() {
-        session_start();
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
         session_destroy();
         session_start();
     }

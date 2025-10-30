@@ -3,6 +3,7 @@
 namespace App\Controllers\Dashboard;
 
 use App\Core\BaseController;
+use App\Core\Auth;
 use App\Models\ClienteModel;
 use App\Models\MascotaModel;
 use App\Models\VentaModel;
@@ -17,6 +18,8 @@ class DashboardController extends BaseController {
     private $citaModel;
 
     public function __construct() {
+        // Proteger todas las rutas del dashboard
+        Auth::middleware();
         $this->clienteModel = $this->model('ClienteModel');
         $this->mascotaModel = $this->model('MascotaModel');
         $this->ventaModel = $this->model('VentaModel');

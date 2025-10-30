@@ -24,7 +24,11 @@
         <div class="stat-card">
             <div class="stat-icon">💰</div>
             <div class="stat-content">
-                <h3><?php echo $estadisticas['ventas']['total_ventas']; ?></h3>
+                <h3><?php
+                    $ventasStats = $estadisticas['ventas'] ?? [];
+                    $ventasFila = is_array($ventasStats) && isset($ventasStats[0]) ? $ventasStats[0] : $ventasStats;
+                    echo htmlspecialchars((string)($ventasFila['total_ventas'] ?? 0));
+                ?></h3>
                 <p>Ventas Realizadas</p>
             </div>
         </div>

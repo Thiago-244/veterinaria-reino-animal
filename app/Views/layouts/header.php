@@ -20,18 +20,23 @@
                 <button class="sidebar__close" id="sidebarClose" aria-label="Cerrar menú">✕</button>
             </div>
             <nav class="sidebar__nav">
+                <?php if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); } $rol = $_SESSION['usuario_rol'] ?? null; ?>
                 <a class="nav__item" href="<?php echo APP_URL; ?>/dashboard">🏠 Dashboard</a>
                 <div class="nav__section">Gestión</div>
                 <a class="nav__item" href="<?php echo APP_URL; ?>/cliente">👥 Clientes</a>
                 <a class="nav__item" href="<?php echo APP_URL; ?>/mascota">🐾 Mascotas</a>
                 <a class="nav__item" href="<?php echo APP_URL; ?>/cita">📅 Citas</a>
                 <a class="nav__item" href="<?php echo APP_URL; ?>/productoservicio">📦 Productos/Servicios</a>
-                <a class="nav__item" href="<?php echo APP_URL; ?>/venta">💰 Ventas</a>
+                <?php if ($rol !== 'Consultor') { ?>
+                    <a class="nav__item" href="<?php echo APP_URL; ?>/venta">💰 Ventas</a>
+                <?php } ?>
                 <div class="nav__section">Catálogos</div>
                 <a class="nav__item" href="<?php echo APP_URL; ?>/especie">🧬 Especies</a>
                 <a class="nav__item" href="<?php echo APP_URL; ?>/raza">🐕 Razas</a>
-                <div class="nav__section">Sistema</div>
-                <a class="nav__item" href="<?php echo APP_URL; ?>/usuario">👤 Usuarios</a>
+                <?php if ($rol === 'Administrador') { ?>
+                    <div class="nav__section">Sistema</div>
+                    <a class="nav__item" href="<?php echo APP_URL; ?>/usuario">👤 Usuarios</a>
+                <?php } ?>
                 <a class="nav__item" href="<?php echo APP_URL; ?>/login/logout">🚪 Cerrar sesión</a>
             </nav>
             <div class="sidebar__footer">
