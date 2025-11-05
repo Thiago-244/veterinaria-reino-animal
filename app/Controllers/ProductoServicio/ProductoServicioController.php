@@ -12,10 +12,16 @@ class ProductoServicioController extends BaseController {
     }
 
     public function index() {
-        $productosServicios = $this->productoServicioModel->obtenerTodos();
+        $termino = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
+        if ($termino !== '') {
+            $productosServicios = $this->productoServicioModel->buscar($termino);
+        } else {
+            $productosServicios = $this->productoServicioModel->obtenerTodos();
+        }
         $data = [
             'titulo' => 'Gestión de Productos y Servicios',
-            'productosServicios' => $productosServicios 
+            'productosServicios' => $productosServicios,
+            'buscar' => $termino
         ];
         $this->view('productosservicios/index', $data);
     }
@@ -36,51 +42,40 @@ class ProductoServicioController extends BaseController {
      */
     public function guardar() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // 1. Recoger los datos del formulario
             $datos = [
-                'tipo' => trim($_POST['tipo']),
-                'nombre' => trim($_POST['nombre']),
-                'precio' => (float)$_POST['precio'],
-                'stock' => (int)$_POST['stock']
+                'tipo' => trim($_POST['tipo'] ?? ''),
+                'nombre' => trim($_POST['nombre'] ?? ''),
+                'precio' => isset($_POST['precio']) ? (float)$_POST['precio'] : 0,
+                'stock' => isset($_POST['stock']) ? (int)$_POST['stock'] : 0
             ];
-
-            // 2. Validaciones básicas
-            if (empty($datos['nombre'])) {
-                die('El nombre es requerido.');
+            $error = '';
+            if ($datos['nombre'] === '') $error = 'Campo requerido: nombre';
+            elseif ($datos['tipo'] === '') $error = 'Campo requerido: tipo';
+            elseif (!in_array($datos['tipo'], ['Producto','Servicio'])) $error = 'El tipo debe ser Producto o Servicio';
+            elseif ($datos['precio'] <= 0) $error = 'El precio debe ser mayor a 0';
+            elseif ($datos['tipo']==='Producto' && $datos['stock'] < 0) $error = 'El stock no puede ser negativo';
+            elseif ($this->productoServicioModel->nombreExiste($datos['nombre'])) $error = 'Ya existe un producto/servicio con ese nombre';
+            if ($datos['tipo'] === 'Servicio') { $datos['stock'] = 9999; }
+            if ($error) {
+                $this->view('productosservicios/crear', [
+                    'titulo' => 'Crear Producto/Servicio',
+                    'error' => $error,
+                    'tipos' => ['Producto','Servicio'],
+                    'productoServicio' => $datos
+                ]);
+                return;
             }
-
-            if (empty($datos['tipo'])) {
-                die('El tipo es requerido.');
-            }
-
-            if ($datos['precio'] <= 0) {
-                die('El precio debe ser mayor a 0.');
-            }
-
-            if (!in_array($datos['tipo'], ['Producto', 'Servicio'])) {
-                die('El tipo debe ser Producto o Servicio.');
-            }
-
-            // Para servicios, el stock se establece en 9999
-            if ($datos['tipo'] === 'Servicio') {
-                $datos['stock'] = 9999;
-            } else {
-                if ($datos['stock'] < 0) {
-                    die('El stock no puede ser negativo.');
-                }
-            }
-
-            // 3. Verificar si ya existe
-            if ($this->productoServicioModel->nombreExiste($datos['nombre'])) {
-                die('Ya existe un producto/servicio con ese nombre.');
-            }
-
-            // 4. Llamar al método del modelo para guardar
             if ($this->productoServicioModel->crear($datos)) {
-                // 5. Redirigir al listado
+                $_SESSION['success_message'] = 'Producto/Servicio creado correctamente';
                 header('Location: ' . APP_URL . '/productoservicio');
+                exit;
             } else {
-                die('Algo salió mal al guardar el producto/servicio.');
+                $this->view('productosservicios/crear', [
+                    'titulo' => 'Crear Producto/Servicio',
+                    'error' => 'No se pudo crear el producto/servicio',
+                    'tipos' => ['Producto','Servicio'],
+                    'productoServicio' => $datos
+                ]);
             }
         }
     }
@@ -107,48 +102,41 @@ class ProductoServicioController extends BaseController {
      */
     public function actualizar($id) {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $ps0 = $this->productoServicioModel->obtenerPorId((int)$id);
             $datos = [
-                'tipo' => trim($_POST['tipo']),
-                'nombre' => trim($_POST['nombre']),
-                'precio' => (float)$_POST['precio'],
-                'stock' => (int)$_POST['stock']
+                'tipo' => trim($_POST['tipo'] ?? ''),
+                'nombre' => trim($_POST['nombre'] ?? ''),
+                'precio' => isset($_POST['precio']) ? (float)$_POST['precio'] : 0,
+                'stock' => isset($_POST['stock']) ? (int)$_POST['stock'] : 0
             ];
-
-            // Validaciones
-            if (empty($datos['nombre'])) {
-                die('El nombre es requerido.');
+            $error = '';
+            if ($datos['nombre'] === '') $error = 'Campo requerido: nombre';
+            elseif ($datos['tipo'] === '') $error = 'Campo requerido: tipo';
+            elseif (!in_array($datos['tipo'], ['Producto','Servicio'])) $error = 'El tipo debe ser Producto o Servicio';
+            elseif ($datos['precio'] <= 0) $error = 'El precio debe ser mayor a 0';
+            elseif ($datos['tipo']==='Producto' && $datos['stock'] < 0) $error = 'El stock no puede ser negativo';
+            elseif ($this->productoServicioModel->nombreExiste($datos['nombre'], (int)$id)) $error = 'Ya existe otro producto/servicio con ese nombre';
+            if ($datos['tipo'] === 'Servicio') { $datos['stock'] = 9999; }
+            if ($error) {
+                $this->view('productosservicios/editar', [
+                    'titulo' => 'Editar Producto/Servicio',
+                    'error' => $error,
+                    'productoServicio' => array_merge($ps0, $datos),
+                    'tipos' => ['Producto','Servicio']
+                ]);
+                return;
             }
-
-            if (empty($datos['tipo'])) {
-                die('El tipo es requerido.');
-            }
-
-            if ($datos['precio'] <= 0) {
-                die('El precio debe ser mayor a 0.');
-            }
-
-            if (!in_array($datos['tipo'], ['Producto', 'Servicio'])) {
-                die('El tipo debe ser Producto o Servicio.');
-            }
-
-            // Para servicios, el stock se establece en 9999
-            if ($datos['tipo'] === 'Servicio') {
-                $datos['stock'] = 9999;
-            } else {
-                if ($datos['stock'] < 0) {
-                    die('El stock no puede ser negativo.');
-                }
-            }
-
-            // Verificar si ya existe otro con el mismo nombre
-            if ($this->productoServicioModel->nombreExiste($datos['nombre'], (int)$id)) {
-                die('Ya existe otro producto/servicio con ese nombre.');
-            }
-            
             if ($this->productoServicioModel->actualizar((int)$id, $datos)) {
+                $_SESSION['success_message'] = 'Producto/Servicio actualizado correctamente';
                 header('Location: ' . APP_URL . '/productoservicio');
+                exit;
             } else {
-                die('Algo salió mal al actualizar el producto/servicio.');
+                $this->view('productosservicios/editar', [
+                    'titulo' => 'Editar Producto/Servicio',
+                    'error' => 'No se pudo actualizar el producto/servicio',
+                    'productoServicio' => array_merge($ps0, $datos),
+                    'tipos' => ['Producto','Servicio']
+                ]);
             }
         }
     }

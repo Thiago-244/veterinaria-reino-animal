@@ -1,8 +1,11 @@
 <?php require APPROOT . '/app/views/layouts/header.php'; ?>
 
-<h1><?php echo htmlspecialchars($titulo); ?></h1>
-
-<form method="POST" action="<?php echo APP_URL; ?>/productoservicio/actualizar/<?php echo (int)$productoServicio['id']; ?>">
+<h1 style="text-align:center">Editar Producto/Servicio</h1>
+<?php if (!empty($error)): ?>
+  <div class="alert-error" style="margin-bottom: 16px; text-align: center;"><?php echo htmlspecialchars($error); ?></div>
+<?php endif; ?>
+<div class="form-wrapper">
+<form method="POST" action="<?php echo APP_URL; ?>/productoservicio/actualizar/<?php echo (int)$productoServicio['id']; ?>" id="formEditPS">
     <div class="form-group">
         <label for="tipo">Tipo:</label>
         <select id="tipo" name="tipo" required onchange="toggleStock()">
@@ -40,9 +43,10 @@
     
     <div class="form-actions">
         <button type="submit" class="btn-guardar">Actualizar Producto/Servicio</button>
-        <a href="<?php echo APP_URL; ?>/productoservicio" class="btn-cancelar">Cancelar</a>
+        <a href="<?php echo APP_URL; ?>/productoservicio" class="btn-cancelar">Regresar</a>
     </div>
 </form>
+</div>
 
 <script>
 function toggleStock() {
@@ -65,72 +69,137 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
+.form-wrapper {
+    max-width: 470px;
+    margin: 45px auto 0;
+    background: #20263B;
+    padding: 38px 31px 34px 31px;
+    border-radius: 12px;
+    box-shadow: 0 2px 13px rgba(0,0,0,0.2);
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #fff;
+}
+
+input[type="text"], 
+input[type="number"], 
+select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #353950;
+    background: #141828;
+    color: #eee;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus {
+    outline: none;
+    border-color: #208cff;
+    box-shadow: 0 0 6px rgba(32, 140, 255, 0.33);
+}
+
+select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23fff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 35px;
+}
+
+.help-text {
+    display: block;
+    margin-top: 5px;
+    color: #8a95b2;
+    font-size: 14px;
+    font-style: italic;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.btn-guardar {
+    background-color: #007bff;
+    color: white;
+    padding: 13px 24px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 17px;
+    font-weight: bold;
+    transition: all 0.12s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-guardar:hover {
+    background-color: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.btn-cancelar {
+    background-color: #6c757d;
+    color: white;
+    padding: 13px 24px;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 17px;
+    font-weight: 600;
+    display: inline-block;
+    transition: all 0.12s;
+}
+
+.btn-cancelar:hover {
+    background-color: #5a6268;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+}
+
+.alert-error {
+    background: #f8d7da;
+    color: #842029;
+    border: 1px solid #f5c2c7;
+    border-radius: 4px;
+    padding: 7px 14px;
+    margin-bottom: 13px;
+    display: inline-block;
+}
+
+@media (max-width: 650px) {
+    .form-wrapper {
+        padding: 16px 6px;
+    }
     .form-group {
-        margin-bottom: 20px;
+        margin-bottom: 13px;
     }
-    
-    label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: bold;
-        color: #333;
-    }
-    
-    input[type="text"], input[type="number"], select {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 16px;
-        max-width: 400px;
-    }
-    
-    input:focus, select:focus {
-        outline: none;
-        border-color: #007bff;
-        box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
-    }
-    
-    .help-text {
-        display: block;
-        margin-top: 5px;
-        color: #6c757d;
-        font-size: 14px;
-    }
-    
     .form-actions {
-        margin-top: 30px;
+        flex-direction: column;
     }
-    
-    .btn-guardar {
-        background-color: #007bff;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 16px;
-        margin-right: 10px;
-    }
-    
-    .btn-guardar:hover {
-        background-color: #0056b3;
-    }
-    
+    .btn-guardar,
     .btn-cancelar {
-        background-color: #6c757d;
-        color: white;
-        padding: 10px 20px;
-        text-decoration: none;
-        border-radius: 4px;
-        font-size: 16px;
-        display: inline-block;
+        width: 100%;
+        text-align: center;
     }
-    
-    .btn-cancelar:hover {
-        background-color: #5a6268;
-        text-decoration: none;
-    }
+}
 </style>
 
 <?php require APPROOT . '/app/views/layouts/footer.php'; ?>

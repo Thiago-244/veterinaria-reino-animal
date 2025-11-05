@@ -35,10 +35,10 @@ class ApiClienteController extends BaseController {
         $direccion = isset($payload['direccion']) ? trim((string)$payload['direccion']) : $existente['direccion'];
         $email = isset($payload['email']) ? trim((string)$payload['email']) : $existente['email'];
 
-        if (!preg_match('/^\d{8,15}$/', $dni)) { http_response_code(422); echo json_encode(['error' => 'El DNI debe tener entre 8 y 15 dígitos numéricos']); return; }
+        if (!preg_match('/^\d{8}$/', $dni)) { http_response_code(422); echo json_encode(['error' => 'El DNI debe tener exactamente 8 dígitos numéricos']); return; }
+        if (!preg_match('/^\d{9}$/', $telefono)) { http_response_code(422); echo json_encode(['error' => 'El teléfono debe tener exactamente 9 dígitos numéricos']); return; }
         if ($email !== null && $email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) { http_response_code(422); echo json_encode(['error' => 'El email no tiene un formato válido']); return; }
-        if (strlen($nombre) > 50 || strlen($apellido) > 50) { http_response_code(422); echo json_encode(['error' => 'Nombre y Apellido no deben superar 50 caracteres']); return; }
-        if (strlen($telefono) > 15) { http_response_code(422); echo json_encode(['error' => 'Teléfono no debe superar 15 caracteres']); return; }
+        if (mb_strlen($nombre) > 40 || mb_strlen($apellido) > 40) { http_response_code(422); echo json_encode(['error' => 'Nombre y Apellido no deben superar 40 caracteres']); return; }
 
         $otroConMismoDni = $this->clienteModel->obtenerPorDni($dni);
         if ($otroConMismoDni && (int)$otroConMismoDni['id'] !== (int)$id) { http_response_code(409); echo json_encode(['error' => 'El DNI ya existe']); return; }
@@ -113,9 +113,14 @@ class ApiClienteController extends BaseController {
         $email = isset($payload['email']) ? trim((string)$payload['email']) : null;
 
         // Validaciones de formato y longitud
-        if (!preg_match('/^\d{8,15}$/', $dni)) {
+        if (!preg_match('/^\d{8}$/', $dni)) {
             http_response_code(422);
-            echo json_encode(['error' => 'El DNI debe tener entre 8 y 15 dígitos numéricos']);
+            echo json_encode(['error' => 'El DNI debe tener exactamente 8 dígitos numéricos']);
+            return;
+        }
+        if (!preg_match('/^\d{9}$/', $telefono)) {
+            http_response_code(422);
+            echo json_encode(['error' => 'El teléfono debe tener exactamente 9 dígitos numéricos']);
             return;
         }
         if ($email !== null && $email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -123,14 +128,9 @@ class ApiClienteController extends BaseController {
             echo json_encode(['error' => 'El email no tiene un formato válido']);
             return;
         }
-        if (strlen($nombre) > 50 || strlen($apellido) > 50) {
+        if (mb_strlen($nombre) > 40 || mb_strlen($apellido) > 40) {
             http_response_code(422);
-            echo json_encode(['error' => 'Nombre y Apellido no deben superar 50 caracteres']);
-            return;
-        }
-        if (strlen($telefono) > 15) {
-            http_response_code(422);
-            echo json_encode(['error' => 'Teléfono no debe superar 15 caracteres']);
+            echo json_encode(['error' => 'Nombre y Apellido no deben superar 40 caracteres']);
             return;
         }
 

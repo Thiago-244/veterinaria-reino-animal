@@ -12,10 +12,24 @@ class VentaController extends BaseController {
     }
 
     public function index() {
-        $ventas = $this->ventaModel->obtenerTodas();
+        $termino = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
+        $fecha = isset($_GET['fecha']) ? trim($_GET['fecha']) : '';
+        
+        if ($fecha !== '') {
+            // Buscar por fecha
+            $ventas = $this->ventaModel->obtenerPorRangoFechas($fecha, $fecha);
+        } elseif ($termino !== '') {
+            // Buscar por cliente (nombre, apellido, DNI)
+            $ventas = $this->buscarVentasPorCliente($termino);
+        } else {
+            $ventas = $this->ventaModel->obtenerTodas();
+        }
+        
         $data = [
             'titulo' => 'Gestión de Ventas',
-            'ventas' => $ventas 
+            'ventas' => $ventas,
+            'buscar' => $termino,
+            'fecha' => $fecha
         ];
         $this->view('ventas/index', $data);
     }
@@ -45,58 +59,96 @@ class VentaController extends BaseController {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // 1. Recoger los datos del formulario
             $datos = [
-                'id_usuario' => (int)$_POST['id_usuario'],
-                'id_cliente' => (int)$_POST['id_cliente'],
-                'total' => (float)$_POST['total'],
+                'id_usuario' => isset($_POST['id_usuario']) ? (int)$_POST['id_usuario'] : 0,
+                'id_cliente' => isset($_POST['id_cliente']) ? (int)$_POST['id_cliente'] : 0,
+                'total' => isset($_POST['total']) ? (float)$_POST['total'] : 0,
                 'detalles' => []
             ];
 
-            // 2. Validaciones básicas
-            if (empty($datos['id_usuario'])) {
-                die('El usuario es requerido.');
+            // 2. Validaciones completas (iguales a ApiVentaController)
+            $error = '';
+            
+            // Validar campos requeridos
+            if ($datos['id_usuario'] <= 0) {
+                $error = 'ID de usuario inválido';
+            } elseif ($datos['id_cliente'] <= 0) {
+                $error = 'ID de cliente inválido';
+            } elseif ($datos['total'] <= 0) {
+                $error = 'El total debe ser mayor a 0';
+            } elseif (!$this->ventaModel->usuarioExiste($datos['id_usuario'])) {
+                $error = 'Usuario no encontrado';
+            } elseif (!$this->ventaModel->clienteExiste($datos['id_cliente'])) {
+                $error = 'Cliente no encontrado';
             }
 
-            if (empty($datos['id_cliente'])) {
-                die('El cliente es requerido.');
-            }
-
-            if ($datos['total'] <= 0) {
-                die('El total debe ser mayor a 0.');
-            }
-
-            // 3. Verificar que el usuario y cliente existen
-            if (!$this->ventaModel->usuarioExiste($datos['id_usuario'])) {
-                die('El usuario seleccionado no existe.');
-            }
-
-            if (!$this->ventaModel->clienteExiste($datos['id_cliente'])) {
-                die('El cliente seleccionado no existe.');
-            }
-
-            // 4. Procesar detalles de venta
-            if (isset($_POST['detalles']) && is_array($_POST['detalles'])) {
+            // 3. Procesar detalles de venta
+            if (!$error && isset($_POST['detalles']) && is_array($_POST['detalles'])) {
                 foreach ($_POST['detalles'] as $detalle) {
-                    if (!empty($detalle['id_producto']) && !empty($detalle['cantidad']) && !empty($detalle['precio'])) {
+                    if (isset($detalle['id_producto']) && isset($detalle['cantidad']) && isset($detalle['precio'])) {
+                        $id_producto = (int)$detalle['id_producto'];
+                        $cantidad = (int)$detalle['cantidad'];
+                        $precio = (float)$detalle['precio'];
+                        
+                        // Validar cada detalle
+                        if ($cantidad <= 0) {
+                            $error = 'La cantidad debe ser mayor a 0';
+                            break;
+                        }
+                        if ($precio <= 0) {
+                            $error = 'El precio debe ser mayor a 0';
+                            break;
+                        }
+                        
                         $datos['detalles'][] = [
-                            'id_producto' => (int)$detalle['id_producto'],
-                            'cantidad' => (int)$detalle['cantidad'],
-                            'precio' => (float)$detalle['precio']
+                            'id_producto' => $id_producto,
+                            'cantidad' => $cantidad,
+                            'precio' => $precio
                         ];
                     }
                 }
             }
 
-            if (empty($datos['detalles'])) {
-                die('Debe agregar al menos un producto/servicio a la venta.');
+            // Validar que haya al menos un detalle
+            if (!$error && empty($datos['detalles'])) {
+                $error = 'Debe agregar al menos un detalle de venta';
             }
 
-            // 5. Llamar al método del modelo para guardar
+            // Si hay error, mostrar el formulario con el error
+            if ($error) {
+                $clientes = $this->obtenerClientes();
+                $usuarios = $this->obtenerUsuarios();
+                $productosServicios = $this->obtenerProductosServicios();
+                
+                $this->view('ventas/crear', [
+                    'titulo' => 'Crear Venta',
+                    'error' => $error,
+                    'clientes' => $clientes,
+                    'usuarios' => $usuarios,
+                    'productosServicios' => $productosServicios,
+                    'venta' => $datos
+                ]);
+                return;
+            }
+
+            // 4. Llamar al método del modelo para guardar
             $ventaId = $this->ventaModel->crear($datos);
             if ($ventaId) {
-                // 6. Redirigir al listado de ventas
+                $_SESSION['success_message'] = 'Venta creada correctamente';
                 header('Location: ' . APP_URL . '/venta');
+                exit;
             } else {
-                die('Algo salió mal al guardar la venta.');
+                $clientes = $this->obtenerClientes();
+                $usuarios = $this->obtenerUsuarios();
+                $productosServicios = $this->obtenerProductosServicios();
+                
+                $this->view('ventas/crear', [
+                    'titulo' => 'Crear Venta',
+                    'error' => 'No se pudo crear la venta',
+                    'clientes' => $clientes,
+                    'usuarios' => $usuarios,
+                    'productosServicios' => $productosServicios,
+                    'venta' => $datos
+                ]);
             }
         }
     }
@@ -124,11 +176,20 @@ class VentaController extends BaseController {
      * Elimina una venta.
      */
     public function eliminar($id) {
-        if ($this->ventaModel->eliminar((int)$id)) {
+        $existente = $this->ventaModel->obtenerPorId((int)$id);
+        if (!$existente) {
+            $_SESSION['error_message'] = 'Venta no encontrada';
             header('Location: ' . APP_URL . '/venta');
-        } else {
-            die('No se pudo eliminar la venta.');
+            exit;
         }
+        
+        if ($this->ventaModel->eliminar((int)$id)) {
+            $_SESSION['success_message'] = 'Venta eliminada correctamente';
+        } else {
+            $_SESSION['error_message'] = 'No se pudo eliminar la venta';
+        }
+        header('Location: ' . APP_URL . '/venta');
+        exit;
     }
 
     /**
@@ -190,20 +251,42 @@ class VentaController extends BaseController {
      * Métodos auxiliares para obtener datos
      */
     private function obtenerClientes() {
-        $this->db = new \App\Core\Database();
-        $this->db->query("SELECT id, nombre, apellido, dni FROM clientes ORDER BY nombre ASC");
-        return $this->db->resultSet();
+        $db = new \App\Core\Database();
+        $db->query("SELECT id, nombre, apellido, dni FROM clientes ORDER BY nombre ASC");
+        return $db->resultSet();
     }
 
     private function obtenerUsuarios() {
-        $this->db = new \App\Core\Database();
-        $this->db->query("SELECT id, nombre FROM usuarios WHERE estado = 1 ORDER BY nombre ASC");
-        return $this->db->resultSet();
+        $db = new \App\Core\Database();
+        $db->query("SELECT id, nombre FROM usuarios WHERE estado = 1 ORDER BY nombre ASC");
+        return $db->resultSet();
     }
 
     private function obtenerProductosServicios() {
-        $this->db = new \App\Core\Database();
-        $this->db->query("SELECT id, tipo, nombre, precio, stock FROM productoservicio ORDER BY tipo, nombre ASC");
-        return $this->db->resultSet();
+        $db = new \App\Core\Database();
+        $db->query("SELECT id, tipo, nombre, precio, stock FROM productoservicio ORDER BY tipo, nombre ASC");
+        return $db->resultSet();
+    }
+
+    /**
+     * Busca ventas por cliente (nombre, apellido o DNI)
+     */
+    private function buscarVentasPorCliente($termino) {
+        $db = new \App\Core\Database();
+        $db->query("
+            SELECT 
+                v.id, v.id_usuario, v.id_cliente, v.total, v.creado_en,
+                u.nombre as usuario_nombre,
+                c.nombre as cliente_nombre, c.apellido as cliente_apellido, c.dni as cliente_dni
+            FROM venta v
+            LEFT JOIN usuarios u ON v.id_usuario = u.id
+            LEFT JOIN clientes c ON v.id_cliente = c.id
+            WHERE c.nombre LIKE :termino 
+            OR c.apellido LIKE :termino 
+            OR c.dni LIKE :termino
+            ORDER BY v.creado_en DESC
+        ");
+        $db->bind(':termino', '%' . $termino . '%');
+        return $db->resultSet();
     }
 }

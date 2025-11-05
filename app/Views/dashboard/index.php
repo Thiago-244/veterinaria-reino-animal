@@ -3,6 +3,33 @@
 <h1><?php echo htmlspecialchars($titulo); ?></h1>
 
 <div class="dashboard-container">
+    <!-- Perfil de Usuario -->
+    <?php if (!empty($usuario)): ?>
+    <div class="profile-card-dashboard">
+        <div class="profile-header-dashboard">
+            <div class="profile-avatar-dashboard">
+                <span><?php echo strtoupper(substr($usuario['nombre'] ?? 'U', 0, 1)); ?></span>
+            </div>
+            <div class="profile-info-dashboard">
+                <h2><?php echo htmlspecialchars($usuario['nombre'] ?? 'Usuario'); ?></h2>
+                <p class="profile-email"><?php echo htmlspecialchars($usuario['email'] ?? ''); ?></p>
+                <div class="profile-badges">
+                    <span class="role-badge role-<?php echo strtolower($usuario['rol'] ?? ''); ?>">
+                        <?php echo htmlspecialchars($usuario['rol'] ?? 'Usuario'); ?>
+                    </span>
+                    <span class="status-badge status-<?php echo ($usuario['estado'] ?? 0) ? 'active' : 'inactive'; ?>">
+                        <?php echo ($usuario['estado'] ?? 0) ? 'Activo' : 'Inactivo'; ?>
+                    </span>
+                </div>
+            </div>
+            <div class="profile-actions-dashboard">
+                <a href="<?php echo APP_URL; ?>/login/perfil" class="btn-profile">👤 Ver Perfil Completo</a>
+                <a href="<?php echo APP_URL; ?>/login/cambiar-password" class="btn-profile-secondary">🔐 Cambiar Contraseña</a>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Estadísticas Generales -->
     <div class="stats-grid">
         <div class="stat-card">
@@ -171,6 +198,159 @@
     padding: 20px;
 }
 
+/* Perfil Card en Dashboard */
+.profile-card-dashboard {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.profile-header-dashboard {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.profile-avatar-dashboard {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 36px;
+    font-weight: 800;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+.profile-info-dashboard {
+    flex: 1;
+    color: white;
+    min-width: 200px;
+}
+
+.profile-info-dashboard h2 {
+    margin: 0 0 8px 0;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.profile-email {
+    margin: 0 0 12px 0;
+    opacity: 0.9;
+    font-size: 14px;
+}
+
+.profile-badges {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.role-administrador {
+    background: #ff6b6b;
+    color: white;
+}
+
+.role-editor {
+    background: #4ecdc4;
+    color: white;
+}
+
+.role-consultor {
+    background: #45b7d1;
+    color: white;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-active {
+    background: #51cf66;
+    color: white;
+}
+
+.status-inactive {
+    background: #ffa8a8;
+    color: white;
+}
+
+.profile-actions-dashboard {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn-profile {
+    padding: 10px 18px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-profile:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn-profile-secondary {
+    padding: 10px 18px;
+    background: white;
+    color: #667eea;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.btn-profile-secondary:hover {
+    background: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -326,6 +506,23 @@
 .action-btn span:last-child {
     font-size: 0.9em;
     font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .profile-header-dashboard {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .profile-actions-dashboard {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .dashboard-row {
+        grid-template-columns: 1fr;
+    }
 }
 </style>
 

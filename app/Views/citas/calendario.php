@@ -1,251 +1,557 @@
 <?php require APPROOT . '/app/views/layouts/header.php'; ?>
 
-<h1><?php echo htmlspecialchars($titulo); ?></h1>
+<h1 style="text-align:center;margin-bottom:30px;">📅 Calendario de Citas Médicas</h1>
 
-<div class="calendario-controls">
+<div class="calendario-controls" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;flex-wrap:wrap;gap:15px;">
     <a href="<?php echo APP_URL; ?>/cita" class="btn-volver">← Volver a Citas</a>
-    <a href="<?php echo APP_URL; ?>/cita/crear" class="btn-nueva">Nueva Cita</a>
+    <div style="display:flex;gap:10px;align-items:center;">
+        <a href="<?php echo APP_URL; ?>/cita/calendario?mes=<?php echo $mesAnterior; ?>&año=<?php echo $añoAnterior; ?>" class="btn-nav">◀ Mes Anterior</a>
+        <span style="font-size:20px;font-weight:bold;color:#fff;padding:0 15px;"><?php echo htmlspecialchars($mesNombre . ' ' . $año); ?></span>
+        <a href="<?php echo APP_URL; ?>/cita/calendario?mes=<?php echo $mesSiguiente; ?>&año=<?php echo $añoSiguiente; ?>" class="btn-nav">Mes Siguiente ▶</a>
+    </div>
+    <a href="<?php echo APP_URL; ?>/cita/crear" class="btn-nueva">➕ Nueva Cita</a>
 </div>
 
-<div class="calendario-container">
-    <div class="calendario-header">
-        <h2>Citas del Mes</h2>
+<div class="calendario-wrapper">
+    <div class="calendario-header-info">
         <div class="estado-leyenda">
             <span class="leyenda-item">
-                <span class="estado-badge estado-pendiente"></span> Pendiente
+                <span class="estado-badge estado-pendiente">🐾</span>
+                <span>Pendiente</span>
             </span>
             <span class="leyenda-item">
-                <span class="estado-badge estado-procesada"></span> Procesada
+                <span class="estado-badge estado-procesada">✅</span>
+                <span>Procesada</span>
             </span>
             <span class="leyenda-item">
-                <span class="estado-badge estado-cancelada"></span> Cancelada
+                <span class="estado-badge estado-cancelada">❌</span>
+                <span>Cancelada</span>
             </span>
         </div>
     </div>
     
-    <div class="citas-lista">
-        <?php if (empty($citas)): ?>
-            <div class="sin-citas">
-                <p>No hay citas programadas para este mes.</p>
-                <a href="<?php echo APP_URL; ?>/cita/crear" class="btn-crear-primera">Crear Primera Cita</a>
-            </div>
-        <?php else: ?>
-            <?php foreach ($citas as $cita): ?>
-                <div class="cita-item estado-<?php echo strtolower($cita['estado']); ?>">
-                    <div class="cita-fecha">
-                        <?php 
-                        $fecha = new DateTime($cita['fecha_cita']);
-                        echo $fecha->format('d/m/Y');
-                        ?>
-                        <span class="cita-hora"><?php echo $fecha->format('H:i'); ?></span>
-                    </div>
-                    <div class="cita-info">
-                        <div class="cita-codigo"><?php echo htmlspecialchars($cita['codigo']); ?></div>
-                        <div class="cita-mascota"><?php echo htmlspecialchars($cita['mascota_nombre']); ?></div>
-                        <div class="cita-cliente"><?php echo htmlspecialchars($cita['cliente_nombre'] . ' ' . $cita['cliente_apellido']); ?></div>
-                        <div class="cita-motivo"><?php echo htmlspecialchars($cita['motivo']); ?></div>
-                    </div>
-                    <div class="cita-acciones">
-                        <span class="estado-badge estado-<?php echo strtolower($cita['estado']); ?>">
-                            <?php echo htmlspecialchars($cita['estado']); ?>
-                        </span>
-                        <a href="<?php echo APP_URL; ?>/cita/editar/<?php echo (int)$cita['id']; ?>" class="btn-editar">Editar</a>
-                    </div>
+    <div class="calendario-grid">
+        <div class="calendario-dias-semana">
+            <div class="dia-semana">Dom</div>
+            <div class="dia-semana">Lun</div>
+            <div class="dia-semana">Mar</div>
+            <div class="dia-semana">Mié</div>
+            <div class="dia-semana">Jue</div>
+            <div class="dia-semana">Vie</div>
+            <div class="dia-semana">Sáb</div>
+        </div>
+        
+        <div class="calendario-dias">
+            <?php 
+            // Espacios en blanco para los días antes del primer día del mes
+            for ($i = 0; $i < $diaSemanaInicio; $i++): 
+            ?>
+                <div class="calendario-dia vacio"></div>
+            <?php endfor; ?>
+            
+            <?php 
+            // Días del mes
+            for ($dia = 1; $dia <= $diasEnMes; $dia++): 
+                $tieneCitas = isset($citasPorDia[$dia]);
+                $citasDelDia = $tieneCitas ? $citasPorDia[$dia] : [];
+                $esHoy = ($dia == date('d') && $mes == date('m') && $año == date('Y'));
+            ?>
+                <div class="calendario-dia <?php echo $esHoy ? 'hoy' : ''; ?> <?php echo $tieneCitas ? 'tiene-citas' : ''; ?>">
+                    <div class="dia-numero"><?php echo $dia; ?></div>
+                    <?php if ($tieneCitas): ?>
+                        <div class="citas-del-dia">
+                            <?php foreach ($citasDelDia as $cita): ?>
+                                <div class="cita-mini estado-<?php echo strtolower($cita['estado']); ?>" 
+                                     title="<?php echo htmlspecialchars($cita['codigo'] . ' - ' . $cita['mascota_nombre'] . ' - ' . $cita['motivo']); ?>">
+                                    <?php 
+                                    $fechaObj = new DateTime($cita['fecha_cita']);
+                                    echo $fechaObj->format('H:i');
+                                    ?>
+                                    <span class="cita-mini-texto"><?php echo htmlspecialchars(substr($cita['mascota_nombre'], 0, 8)); ?></span>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
+            <?php endfor; ?>
+        </div>
     </div>
 </div>
 
+<!-- Lista detallada de citas del mes -->
+<div class="citas-mes-lista" style="margin-top:40px;">
+    <h2 style="color:#fff;margin-bottom:20px;text-align:center;">📋 Lista de Citas - <?php echo htmlspecialchars($mesNombre . ' ' . $año); ?></h2>
+    
+    <?php if (empty($citas)): ?>
+        <div class="sin-citas">
+            <div class="huellitas-container">
+                <span class="huellita">🐾</span>
+                <span class="huellita">🐾</span>
+                <span class="huellita">🐾</span>
+            </div>
+            <p>No hay citas programadas para este mes.</p>
+            <a href="<?php echo APP_URL; ?>/cita/crear" class="btn-crear-primera">➕ Crear Primera Cita</a>
+        </div>
+    <?php else: ?>
+        <div class="citas-lista-detalle">
+            <?php foreach ($citas as $cita): ?>
+                <div class="cita-item-detalle estado-<?php echo strtolower($cita['estado']); ?>">
+                    <div class="cita-icono">
+                        <?php if (strtolower($cita['estado']) == 'pendiente'): ?>
+                            🐾
+                        <?php elseif (strtolower($cita['estado']) == 'procesada'): ?>
+                            ✅
+                        <?php else: ?>
+                            ❌
+                        <?php endif; ?>
+                    </div>
+                    <div class="cita-fecha-detalle">
+                        <?php 
+                        $fecha = new DateTime($cita['fecha_cita']);
+                        echo '<strong>' . $fecha->format('d/m/Y') . '</strong>';
+                        echo '<span class="cita-hora-detalle">' . $fecha->format('H:i') . '</span>';
+                        ?>
+                    </div>
+                    <div class="cita-info-detalle">
+                        <div class="cita-codigo-detalle"><?php echo htmlspecialchars($cita['codigo']); ?></div>
+                        <div class="cita-mascota-detalle">
+                            <span class="icono-mascota">🐕</span>
+                            <?php echo htmlspecialchars($cita['mascota_nombre'] ?? 'Sin mascota'); ?>
+                        </div>
+                        <div class="cita-cliente-detalle">
+                            <span class="icono-cliente">👤</span>
+                            <?php echo htmlspecialchars(($cita['cliente_nombre'] ?? '') . ' ' . ($cita['cliente_apellido'] ?? '')); ?>
+                        </div>
+                        <div class="cita-motivo-detalle">
+                            <span class="icono-motivo">💬</span>
+                            <?php echo htmlspecialchars($cita['motivo']); ?>
+                        </div>
+                    </div>
+                    <div class="cita-acciones-detalle">
+                        <span class="estado-badge-detalle estado-<?php echo strtolower($cita['estado']); ?>">
+                            <?php echo htmlspecialchars($cita['estado']); ?>
+                        </span>
+                        <a href="<?php echo APP_URL; ?>/cita/editar/<?php echo (int)$cita['id']; ?>" class="btn-editar-detalle">✏️ Editar</a>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+</div>
+
 <style>
+/* Controles */
+.calendario-controls {
+    background: #20263B;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+}
+
+.btn-volver, .btn-nueva, .btn-nav {
+    display: inline-block;
+    padding: 10px 18px;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-volver {
+    background-color: #6c757d;
+}
+
+.btn-volver:hover {
+    background-color: #5a6268;
+    transform: translateY(-1px);
+}
+
+.btn-nueva {
+    background-color: #28a745;
+}
+
+.btn-nueva:hover {
+    background-color: #218838;
+    transform: translateY(-1px);
+}
+
+.btn-nav {
+    background-color: #2072ff;
+    font-size: 14px;
+}
+
+.btn-nav:hover {
+    background-color: #174b97;
+    transform: translateY(-1px);
+}
+
+/* Calendario Grid */
+.calendario-wrapper {
+    background: #20263B;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.calendario-header-info {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.estado-leyenda {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    flex-wrap: wrap;
+}
+
+.leyenda-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.estado-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.estado-badge.estado-pendiente {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.estado-badge.estado-procesada {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.estado-badge.estado-cancelada {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.calendario-grid {
+    background: #141828;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.calendario-dias-semana {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: #28304A;
+    border-bottom: 2px solid #353950;
+}
+
+.dia-semana {
+    padding: 15px;
+    text-align: center;
+    font-weight: bold;
+    color: #fff;
+    font-size: 15px;
+}
+
+.calendario-dias {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    background: #353950;
+    padding: 2px;
+}
+
+.calendario-dia {
+    min-height: 100px;
+    background: #141828;
+    padding: 8px;
+    position: relative;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.calendario-dia.vacio {
+    background: #0f121a;
+}
+
+.calendario-dia:hover {
+    background: #1a1f35;
+    transform: scale(1.02);
+}
+
+.calendario-dia.hoy {
+    background: #2d3748;
+    border: 2px solid #2072ff;
+}
+
+.calendario-dia.tiene-citas {
+    background: #1a2332;
+}
+
+.dia-numero {
+    font-weight: bold;
+    color: #fff;
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.citas-del-dia {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cita-mini {
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.cita-mini.estado-pendiente {
+    background-color: rgba(255, 193, 7, 0.3);
+    color: #ffc107;
+    border-left: 3px solid #ffc107;
+}
+
+.cita-mini.estado-procesada {
+    background-color: rgba(40, 167, 69, 0.3);
+    color: #28a745;
+    border-left: 3px solid #28a745;
+}
+
+.cita-mini.estado-cancelada {
+    background-color: rgba(220, 53, 69, 0.3);
+    color: #dc3545;
+    border-left: 3px solid #dc3545;
+}
+
+.cita-mini:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.cita-mini-texto {
+    display: block;
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+/* Lista de citas detallada */
+.sin-citas {
+    text-align: center;
+    padding: 60px 20px;
+    color: #8a95b2;
+}
+
+.huellitas-container {
+    margin-bottom: 20px;
+    font-size: 40px;
+    animation: bounce 2s infinite;
+}
+
+.huellita {
+    display: inline-block;
+    margin: 0 10px;
+    animation: float 3s ease-in-out infinite;
+}
+
+.huellita:nth-child(2) {
+    animation-delay: 0.5s;
+}
+
+.huellita:nth-child(3) {
+    animation-delay: 1s;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.btn-crear-primera {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 12px 24px;
+    background-color: #28a745;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.btn-crear-primera:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.citas-lista-detalle {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.cita-item-detalle {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    background: #20263B;
+    border-radius: 8px;
+    border-left: 5px solid;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.cita-item-detalle:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.cita-item-detalle.estado-pendiente {
+    border-left-color: #ffc107;
+    background: linear-gradient(135deg, #20263B 0%, #2d2a1f 100%);
+}
+
+.cita-item-detalle.estado-procesada {
+    border-left-color: #28a745;
+    background: linear-gradient(135deg, #20263B 0%, #1e2d1f 100%);
+}
+
+.cita-item-detalle.estado-cancelada {
+    border-left-color: #dc3545;
+    background: linear-gradient(135deg, #20263B 0%, #2d1e1e 100%);
+}
+
+.cita-icono {
+    font-size: 35px;
+    min-width: 50px;
+    text-align: center;
+}
+
+.cita-fecha-detalle {
+    min-width: 120px;
+    text-align: center;
+    color: #fff;
+}
+
+.cita-hora-detalle {
+    display: block;
+    font-size: 13px;
+    color: #8a95b2;
+    margin-top: 4px;
+}
+
+.cita-info-detalle {
+    flex: 1;
+}
+
+.cita-codigo-detalle {
+    font-weight: bold;
+    color: #2072ff;
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.cita-mascota-detalle,
+.cita-cliente-detalle,
+.cita-motivo-detalle {
+    color: #fff;
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.icono-mascota,
+.icono-cliente,
+.icono-motivo {
+    margin-right: 8px;
+    font-size: 16px;
+}
+
+.cita-acciones-detalle {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    min-width: 120px;
+}
+
+.estado-badge-detalle {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.estado-badge-detalle.estado-pendiente {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.estado-badge-detalle.estado-procesada {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.estado-badge-detalle.estado-cancelada {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.btn-editar-detalle {
+    padding: 8px 16px;
+    background-color: #17a2b8;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-editar-detalle:hover {
+    background-color: #138496;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(23, 162, 184, 0.3);
+}
+
+@media (max-width: 768px) {
     .calendario-controls {
-        margin-bottom: 20px;
-    }
-    
-    .btn-volver, .btn-nueva {
-        display: inline-block;
-        padding: 8px 15px;
-        margin-right: 10px;
-        color: white;
-        text-decoration: none;
-        border-radius: 5px;
-        font-weight: bold;
-    }
-    
-    .btn-volver {
-        background-color: #6c757d;
-    }
-    
-    .btn-nueva {
-        background-color: #28a745;
-    }
-    
-    .calendario-container {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        overflow: hidden;
-    }
-    
-    .calendario-header {
-        background: #f8f9fa;
-        padding: 20px;
-        border-bottom: 1px solid #dee2e6;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .calendario-header h2 {
-        margin: 0;
-        color: #495057;
-    }
-    
-    .estado-leyenda {
-        display: flex;
-        gap: 15px;
-    }
-    
-    .leyenda-item {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        font-size: 14px;
-    }
-    
-    .citas-lista {
-        padding: 20px;
-    }
-    
-    .sin-citas {
-        text-align: center;
-        padding: 40px;
-        color: #6c757d;
-    }
-    
-    .btn-crear-primera {
-        display: inline-block;
-        margin-top: 15px;
-        padding: 10px 20px;
-        background-color: #007bff;
-        color: white;
-        text-decoration: none;
-        border-radius: 5px;
-        font-weight: bold;
-    }
-    
-    .cita-item {
-        display: flex;
-        align-items: center;
-        padding: 15px;
-        margin-bottom: 10px;
-        border-radius: 8px;
-        border-left: 4px solid;
-        background: white;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    
-    .cita-item.estado-pendiente {
-        border-left-color: #ffc107;
-        background-color: #fff3cd;
-    }
-    
-    .cita-item.estado-procesada {
-        border-left-color: #28a745;
-        background-color: #d4edda;
-    }
-    
-    .cita-item.estado-cancelada {
-        border-left-color: #dc3545;
-        background-color: #f8d7da;
-    }
-    
-    .cita-fecha {
-        min-width: 120px;
-        text-align: center;
-        font-weight: bold;
-        color: #495057;
-    }
-    
-    .cita-hora {
-        display: block;
-        font-size: 12px;
-        color: #6c757d;
-        margin-top: 2px;
-    }
-    
-    .cita-info {
-        flex: 1;
-        margin: 0 20px;
-    }
-    
-    .cita-codigo {
-        font-weight: bold;
-        color: #007bff;
-        font-size: 14px;
-    }
-    
-    .cita-mascota {
-        font-weight: bold;
-        color: #495057;
-        margin: 2px 0;
-    }
-    
-    .cita-cliente {
-        color: #6c757d;
-        font-size: 14px;
-        margin: 2px 0;
-    }
-    
-    .cita-motivo {
-        color: #495057;
-        font-size: 13px;
-        margin-top: 5px;
-        font-style: italic;
-    }
-    
-    .cita-acciones {
-        display: flex;
         flex-direction: column;
-        align-items: flex-end;
-        gap: 8px;
+        align-items: stretch;
     }
     
-    .estado-badge {
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 11px;
-        font-weight: bold;
-        text-transform: uppercase;
+    .cita-item-detalle {
+        flex-direction: column;
+        align-items: flex-start;
     }
     
-    .estado-badge.estado-pendiente {
-        background-color: #ffc107;
-        color: #000;
+    .calendario-dia {
+        min-height: 80px;
     }
     
-    .estado-badge.estado-procesada {
-        background-color: #28a745;
-        color: #fff;
+    .cita-mini {
+        font-size: 10px;
     }
-    
-    .estado-badge.estado-cancelada {
-        background-color: #dc3545;
-        color: #fff;
-    }
-    
-    .btn-editar {
-        padding: 4px 8px;
-        background-color: #17a2b8;
-        color: white;
-        text-decoration: none;
-        border-radius: 3px;
-        font-size: 12px;
-    }
-    
-    .btn-editar:hover {
-        background-color: #138496;
-    }
+}
 </style>
 
 <?php require APPROOT . '/app/views/layouts/footer.php'; ?>

@@ -80,8 +80,12 @@ class CitaModel {
     }
 
     public function obtenerCitasPorMes($mes = null, $año = null) {
-        if (!$mes) $mes = date('m');
-        if (!$año) $año = date('Y');
+        if (!$mes) $mes = (int)date('m');
+        if (!$año) $año = (int)date('Y');
+        
+        // Asegurar que sean enteros
+        $mes = (int)$mes;
+        $año = (int)$año;
         
         $this->db->query("
             SELECT 
@@ -94,6 +98,7 @@ class CitaModel {
             WHERE MONTH(c.fecha_cita) = :mes AND YEAR(c.fecha_cita) = :año
             ORDER BY c.fecha_cita ASC
         ");
+        // El método bind detecta automáticamente el tipo cuando el valor es entero
         $this->db->bind(':mes', $mes);
         $this->db->bind(':año', $año);
         return $this->db->resultSet();
@@ -269,6 +274,29 @@ class CitaModel {
             AND c.estado = 'Pendiente'
             ORDER BY c.fecha_cita ASC
         ");
+        return $this->db->resultSet();
+    }
+
+    public function buscarCitas(string $termino) {
+        $this->db->query("
+            SELECT 
+                c.id, c.codigo, c.fecha_cita, c.motivo, c.estado, c.created_at,
+                m.nombre as mascota_nombre, m.codigo as mascota_codigo,
+                cl.nombre as cliente_nombre, cl.apellido as cliente_apellido,
+                u.nombre as veterinario_nombre
+            FROM citas c
+            LEFT JOIN mascotas m ON c.id_mascota = m.id
+            LEFT JOIN clientes cl ON c.id_cliente = cl.id
+            LEFT JOIN usuarios u ON c.id_usuario = u.id
+            WHERE c.codigo LIKE :t
+               OR c.motivo LIKE :t
+               OR m.nombre LIKE :t
+               OR m.codigo LIKE :t
+               OR cl.nombre LIKE :t
+               OR cl.apellido LIKE :t
+            ORDER BY c.fecha_cita ASC
+        ");
+        $this->db->bind(':t', '%' . $termino . '%');
         return $this->db->resultSet();
     }
 }

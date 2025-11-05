@@ -9,6 +9,7 @@ use App\Models\MascotaModel;
 use App\Models\VentaModel;
 use App\Models\ProductoServicioModel;
 use App\Models\CitaModel;
+use App\Models\LoginModel;
 
 class DashboardController extends BaseController {
     private $clienteModel;
@@ -28,6 +29,11 @@ class DashboardController extends BaseController {
     }
 
     public function index() {
+        // Obtener información del usuario logueado
+        $loginModel = new LoginModel();
+        $usuarioId = Auth::id();
+        $usuario = $usuarioId ? $loginModel->obtenerUsuarioPorId($usuarioId) : null;
+        
         $data = [
             'titulo' => 'Dashboard - Veterinaria Reino Animal',
             'estadisticas' => $this->obtenerEstadisticasGenerales(),
@@ -36,7 +42,8 @@ class DashboardController extends BaseController {
             'productos_stock_bajo' => $this->productoServicioModel->obtenerProductosConStockBajo(5),
             'citas_proximas' => $this->citaModel->obtenerCitasProximas(),
             'top_clientes' => $this->ventaModel->obtenerPorClienteAgrupado(),
-            'productos_mas_vendidos' => $this->ventaModel->obtenerProductosMasVendidos(5)
+            'productos_mas_vendidos' => $this->ventaModel->obtenerProductosMasVendidos(5),
+            'usuario' => $usuario
         ];
         
         $this->view('dashboard/index', $data);

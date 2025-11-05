@@ -12,10 +12,18 @@ class EspecieController extends BaseController {
     }
 
     public function index() {
-        $especies = $this->especieModel->obtenerConRazas();
+        $termino = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
+        
+        if ($termino !== '') {
+            $especies = $this->buscarEspecies($termino);
+        } else {
+            $especies = $this->especieModel->obtenerConRazas();
+        }
+        
         $data = [
             'titulo' => 'Gestión de Especies',
-            'especies' => $especies 
+            'especies' => $especies,
+            'buscar' => $termino
         ];
         $this->view('especies/index', $data);
     }
@@ -35,27 +43,42 @@ class EspecieController extends BaseController {
      */
     public function guardar() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // 1. Recoger los datos del formulario
             $datos = [
-                'nombre' => trim($_POST['nombre'])
+                'nombre' => isset($_POST['nombre']) ? trim($_POST['nombre']) : ''
             ];
 
-            // 2. Validaciones básicas
+            // Validaciones completas (iguales a ApiEspecieController)
+            $error = '';
+            
             if (empty($datos['nombre'])) {
-                die('El nombre de la especie es requerido.');
+                $error = 'Campo requerido: nombre';
+            } elseif (strlen($datos['nombre']) > 50) {
+                $error = 'El nombre no debe superar 50 caracteres';
+            } elseif (strlen($datos['nombre']) < 2) {
+                $error = 'El nombre debe tener al menos 2 caracteres';
+            } elseif ($this->especieModel->nombreExiste($datos['nombre'])) {
+                $error = 'Ya existe una especie con ese nombre';
             }
 
-            // 3. Verificar si ya existe
-            if ($this->especieModel->nombreExiste($datos['nombre'])) {
-                die('Ya existe una especie con ese nombre.');
+            if ($error) {
+                $this->view('especies/crear', [
+                    'titulo' => 'Crear Especie',
+                    'error' => $error,
+                    'especie' => $datos
+                ]);
+                return;
             }
 
-            // 4. Llamar al método del modelo para guardar
             if ($this->especieModel->crear($datos)) {
-                // 5. Redirigir al listado de especies
+                $_SESSION['success_message'] = 'Especie creada correctamente';
                 header('Location: ' . APP_URL . '/especie');
+                exit;
             } else {
-                die('Algo salió mal al guardar la especie.');
+                $this->view('especies/crear', [
+                    'titulo' => 'Crear Especie',
+                    'error' => 'No se pudo crear la especie',
+                    'especie' => $datos
+                ]);
             }
         }
     }
@@ -66,7 +89,9 @@ class EspecieController extends BaseController {
     public function editar($id) {
         $especie = $this->especieModel->obtenerPorId((int)$id);
         if (!$especie) { 
-            die('Especie no encontrada'); 
+            $_SESSION['error_message'] = 'Especie no encontrada';
+            header('Location: ' . APP_URL . '/especie');
+            exit;
         }
         
         $data = [
@@ -81,24 +106,49 @@ class EspecieController extends BaseController {
      */
     public function actualizar($id) {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $existente = $this->especieModel->obtenerPorId((int)$id);
+            if (!$existente) {
+                $_SESSION['error_message'] = 'Especie no encontrada';
+                header('Location: ' . APP_URL . '/especie');
+                exit;
+            }
+            
             $datos = [
-                'nombre' => trim($_POST['nombre'])
+                'nombre' => isset($_POST['nombre']) ? trim($_POST['nombre']) : $existente['nombre']
             ];
 
-            // Validaciones
+            // Validaciones completas (iguales a ApiEspecieController)
+            $error = '';
+            
             if (empty($datos['nombre'])) {
-                die('El nombre de la especie es requerido.');
+                $error = 'Campo requerido: nombre';
+            } elseif (strlen($datos['nombre']) > 50) {
+                $error = 'El nombre no debe superar 50 caracteres';
+            } elseif (strlen($datos['nombre']) < 2) {
+                $error = 'El nombre debe tener al menos 2 caracteres';
+            } elseif ($this->especieModel->nombreExiste($datos['nombre'], (int)$id)) {
+                $error = 'Ya existe otra especie con ese nombre';
             }
 
-            // Verificar si ya existe otro con el mismo nombre
-            if ($this->especieModel->nombreExiste($datos['nombre'], (int)$id)) {
-                die('Ya existe otra especie con ese nombre.');
+            if ($error) {
+                $this->view('especies/editar', [
+                    'titulo' => 'Editar Especie',
+                    'error' => $error,
+                    'especie' => array_merge($existente, $datos)
+                ]);
+                return;
             }
             
             if ($this->especieModel->actualizar((int)$id, $datos)) {
+                $_SESSION['success_message'] = 'Especie actualizada correctamente';
                 header('Location: ' . APP_URL . '/especie');
+                exit;
             } else {
-                die('Algo salió mal al actualizar la especie.');
+                $this->view('especies/editar', [
+                    'titulo' => 'Editar Especie',
+                    'error' => 'No se pudo actualizar la especie',
+                    'especie' => array_merge($existente, $datos)
+                ]);
             }
         }
     }
@@ -107,18 +157,49 @@ class EspecieController extends BaseController {
      * Elimina una especie.
      */
     public function eliminar($id) {
+        $existente = $this->especieModel->obtenerPorId((int)$id);
+        if (!$existente) {
+            $_SESSION['error_message'] = 'Especie no encontrada';
+            header('Location: ' . APP_URL . '/especie');
+            exit;
+        }
+        
         // Verificar si la especie tiene razas asociadas
-        $especie = $this->especieModel->obtenerConRazas();
-        foreach ($especie as $e) {
+        $especiesConRazas = $this->especieModel->obtenerConRazas();
+        foreach ($especiesConRazas as $e) {
             if ($e['id'] == $id && $e['total_razas'] > 0) {
-                die('No se puede eliminar la especie porque tiene razas asociadas.');
+                $_SESSION['error_message'] = 'No se puede eliminar la especie porque tiene razas asociadas';
+                header('Location: ' . APP_URL . '/especie');
+                exit;
             }
         }
 
         if ($this->especieModel->eliminar((int)$id)) {
-            header('Location: ' . APP_URL . '/especie');
+            $_SESSION['success_message'] = 'Especie eliminada correctamente';
         } else {
-            die('No se pudo eliminar la especie.');
+            $_SESSION['error_message'] = 'No se pudo eliminar la especie';
         }
+        header('Location: ' . APP_URL . '/especie');
+        exit;
+    }
+
+    /**
+     * Busca especies por nombre
+     */
+    private function buscarEspecies($termino) {
+        $db = new \App\Core\Database();
+        $db->query("
+            SELECT 
+                e.id,
+                e.nombre as especie_nombre,
+                COUNT(r.id) as total_razas
+            FROM especies e
+            LEFT JOIN razas r ON e.id = r.id_especie
+            WHERE e.nombre LIKE :termino
+            GROUP BY e.id, e.nombre
+            ORDER BY e.nombre ASC
+        ");
+        $db->bind(':termino', '%' . $termino . '%');
+        return $db->resultSet();
     }
 }

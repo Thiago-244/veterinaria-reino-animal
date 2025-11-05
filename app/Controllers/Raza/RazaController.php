@@ -12,10 +12,26 @@ class RazaController extends BaseController {
     }
 
     public function index() {
-        $razas = $this->razaModel->obtenerTodas();
+        $termino = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
+        $id_especie = isset($_GET['especie']) ? (int)$_GET['especie'] : 0;
+        
+        if ($id_especie > 0) {
+            $razas = $this->razaModel->obtenerPorEspecie($id_especie);
+        } elseif ($termino !== '') {
+            $razas = $this->buscarRazas($termino);
+        } else {
+            $razas = $this->razaModel->obtenerTodas();
+        }
+        
+        // Obtener especies para el filtro
+        $especies = $this->razaModel->obtenerEspecies();
+        
         $data = [
             'titulo' => 'Gestión de Razas',
-            'razas' => $razas 
+            'razas' => $razas,
+            'buscar' => $termino,
+            'id_especie' => $id_especie,
+            'especies' => $especies
         ];
         $this->view('razas/index', $data);
     }
@@ -37,37 +53,51 @@ class RazaController extends BaseController {
      */
     public function guardar() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // 1. Recoger los datos del formulario
             $datos = [
-                'id_especie' => (int)$_POST['id_especie'],
-                'nombre' => trim($_POST['nombre'])
+                'id_especie' => isset($_POST['id_especie']) ? (int)$_POST['id_especie'] : 0,
+                'nombre' => isset($_POST['nombre']) ? trim($_POST['nombre']) : ''
             ];
 
-            // 2. Validaciones básicas
+            // Validaciones completas (iguales a ApiRazaController)
+            $error = '';
+            
             if (empty($datos['nombre'])) {
-                die('El nombre de la raza es requerido.');
+                $error = 'Campo requerido: nombre';
+            } elseif (empty($datos['id_especie']) || $datos['id_especie'] <= 0) {
+                $error = 'Campo requerido: id_especie';
+            } elseif (strlen($datos['nombre']) > 50) {
+                $error = 'El nombre no debe superar 50 caracteres';
+            } elseif (strlen($datos['nombre']) < 2) {
+                $error = 'El nombre debe tener al menos 2 caracteres';
+            } elseif (!$this->razaModel->especieExiste($datos['id_especie'])) {
+                $error = 'Especie no encontrada';
+            } elseif ($this->razaModel->nombreExisteEnEspecie($datos['nombre'], $datos['id_especie'])) {
+                $error = 'Ya existe una raza con ese nombre en la especie seleccionada';
             }
 
-            if (empty($datos['id_especie'])) {
-                die('La especie es requerida.');
+            if ($error) {
+                $especies = $this->razaModel->obtenerEspecies();
+                $this->view('razas/crear', [
+                    'titulo' => 'Crear Raza',
+                    'error' => $error,
+                    'especies' => $especies,
+                    'raza' => $datos
+                ]);
+                return;
             }
 
-            // 3. Verificar si la especie existe
-            if (!$this->razaModel->especieExiste($datos['id_especie'])) {
-                die('La especie seleccionada no existe.');
-            }
-
-            // 4. Verificar si ya existe la raza en esa especie
-            if ($this->razaModel->nombreExisteEnEspecie($datos['nombre'], $datos['id_especie'])) {
-                die('Ya existe una raza con ese nombre en la especie seleccionada.');
-            }
-
-            // 5. Llamar al método del modelo para guardar
             if ($this->razaModel->crear($datos)) {
-                // 6. Redirigir al listado de razas
+                $_SESSION['success_message'] = 'Raza creada correctamente';
                 header('Location: ' . APP_URL . '/raza');
+                exit;
             } else {
-                die('Algo salió mal al guardar la raza.');
+                $especies = $this->razaModel->obtenerEspecies();
+                $this->view('razas/crear', [
+                    'titulo' => 'Crear Raza',
+                    'error' => 'No se pudo crear la raza',
+                    'especies' => $especies,
+                    'raza' => $datos
+                ]);
             }
         }
     }
@@ -78,7 +108,9 @@ class RazaController extends BaseController {
     public function editar($id) {
         $raza = $this->razaModel->obtenerPorId((int)$id);
         if (!$raza) { 
-            die('Raza no encontrada'); 
+            $_SESSION['error_message'] = 'Raza no encontrada';
+            header('Location: ' . APP_URL . '/raza');
+            exit;
         }
         
         $especies = $this->razaModel->obtenerEspecies();
@@ -95,34 +127,58 @@ class RazaController extends BaseController {
      */
     public function actualizar($id) {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $existente = $this->razaModel->obtenerPorId((int)$id);
+            if (!$existente) {
+                $_SESSION['error_message'] = 'Raza no encontrada';
+                header('Location: ' . APP_URL . '/raza');
+                exit;
+            }
+            
             $datos = [
-                'id_especie' => (int)$_POST['id_especie'],
-                'nombre' => trim($_POST['nombre'])
+                'id_especie' => isset($_POST['id_especie']) ? (int)$_POST['id_especie'] : $existente['id_especie'],
+                'nombre' => isset($_POST['nombre']) ? trim($_POST['nombre']) : $existente['nombre']
             ];
 
-            // Validaciones
+            // Validaciones completas (iguales a ApiRazaController)
+            $error = '';
+            
             if (empty($datos['nombre'])) {
-                die('El nombre de la raza es requerido.');
+                $error = 'Campo requerido: nombre';
+            } elseif (empty($datos['id_especie']) || $datos['id_especie'] <= 0) {
+                $error = 'Campo requerido: id_especie';
+            } elseif (strlen($datos['nombre']) > 50) {
+                $error = 'El nombre no debe superar 50 caracteres';
+            } elseif (strlen($datos['nombre']) < 2) {
+                $error = 'El nombre debe tener al menos 2 caracteres';
+            } elseif (!$this->razaModel->especieExiste($datos['id_especie'])) {
+                $error = 'Especie no encontrada';
+            } elseif ($this->razaModel->nombreExisteEnEspecie($datos['nombre'], $datos['id_especie'], (int)$id)) {
+                $error = 'Ya existe otra raza con ese nombre en la especie seleccionada';
             }
 
-            if (empty($datos['id_especie'])) {
-                die('La especie es requerida.');
-            }
-
-            // Verificar si la especie existe
-            if (!$this->razaModel->especieExiste($datos['id_especie'])) {
-                die('La especie seleccionada no existe.');
-            }
-
-            // Verificar si ya existe otra raza con el mismo nombre en esa especie
-            if ($this->razaModel->nombreExisteEnEspecie($datos['nombre'], $datos['id_especie'], (int)$id)) {
-                die('Ya existe otra raza con ese nombre en la especie seleccionada.');
+            if ($error) {
+                $especies = $this->razaModel->obtenerEspecies();
+                $this->view('razas/editar', [
+                    'titulo' => 'Editar Raza',
+                    'error' => $error,
+                    'especies' => $especies,
+                    'raza' => array_merge($existente, $datos)
+                ]);
+                return;
             }
             
             if ($this->razaModel->actualizar((int)$id, $datos)) {
+                $_SESSION['success_message'] = 'Raza actualizada correctamente';
                 header('Location: ' . APP_URL . '/raza');
+                exit;
             } else {
-                die('Algo salió mal al actualizar la raza.');
+                $especies = $this->razaModel->obtenerEspecies();
+                $this->view('razas/editar', [
+                    'titulo' => 'Editar Raza',
+                    'error' => 'No se pudo actualizar la raza',
+                    'especies' => $especies,
+                    'raza' => array_merge($existente, $datos)
+                ]);
             }
         }
     }
@@ -131,11 +187,20 @@ class RazaController extends BaseController {
      * Elimina una raza.
      */
     public function eliminar($id) {
-        if ($this->razaModel->eliminar((int)$id)) {
+        $existente = $this->razaModel->obtenerPorId((int)$id);
+        if (!$existente) {
+            $_SESSION['error_message'] = 'Raza no encontrada';
             header('Location: ' . APP_URL . '/raza');
-        } else {
-            die('No se pudo eliminar la raza.');
+            exit;
         }
+        
+        if ($this->razaModel->eliminar((int)$id)) {
+            $_SESSION['success_message'] = 'Raza eliminada correctamente';
+        } else {
+            $_SESSION['error_message'] = 'No se pudo eliminar la raza';
+        }
+        header('Location: ' . APP_URL . '/raza');
+        exit;
     }
 
     /**
@@ -149,5 +214,25 @@ class RazaController extends BaseController {
             header('Content-Type: application/json');
             echo json_encode($razas);
         }
+    }
+
+    /**
+     * Busca razas por nombre
+     */
+    private function buscarRazas($termino) {
+        $db = new \App\Core\Database();
+        $db->query("
+            SELECT 
+                r.id,
+                r.nombre,
+                r.id_especie,
+                e.nombre as especie_nombre
+            FROM razas r
+            LEFT JOIN especies e ON r.id_especie = e.id
+            WHERE r.nombre LIKE :termino
+            ORDER BY e.nombre, r.nombre ASC
+        ");
+        $db->bind(':termino', '%' . $termino . '%');
+        return $db->resultSet();
     }
 }

@@ -46,14 +46,40 @@ class LoginModel {
      * Obtiene información del usuario por ID (sin password)
      */
     public function obtenerUsuarioPorId(int $id) {
-        $this->db->query("
-            SELECT id, nombre, email, rol, estado 
-            FROM usuarios 
-            WHERE id = :id 
-            LIMIT 1
-        ");
-        $this->db->bind(':id', $id);
-        return $this->db->single();
+        // Intentar obtener con created_at y updated_at si existen
+        try {
+            $this->db->query("
+                SELECT id, nombre, email, rol, estado, created_at, updated_at 
+                FROM usuarios 
+                WHERE id = :id 
+                LIMIT 1
+            ");
+            $this->db->bind(':id', $id);
+            $result = $this->db->single();
+            // Si no tiene created_at, establecer valores por defecto
+            if ($result && !isset($result['created_at'])) {
+                $result['created_at'] = date('Y-m-d H:i:s');
+            }
+            if ($result && !isset($result['updated_at'])) {
+                $result['updated_at'] = date('Y-m-d H:i:s');
+            }
+            return $result;
+        } catch (\Exception $e) {
+            // Si falla, intentar sin created_at y updated_at
+            $this->db->query("
+                SELECT id, nombre, email, rol, estado
+                FROM usuarios 
+                WHERE id = :id 
+                LIMIT 1
+            ");
+            $this->db->bind(':id', $id);
+            $result = $this->db->single();
+            if ($result) {
+                $result['created_at'] = date('Y-m-d H:i:s');
+                $result['updated_at'] = date('Y-m-d H:i:s');
+            }
+            return $result;
+        }
     }
 
     /**
