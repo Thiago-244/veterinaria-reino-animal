@@ -77,8 +77,10 @@ class DashboardController extends BaseController {
         $this->view('dashboard/estadisticas', $data);
     }
 
+    //Se busca obtener los reportes principales para poder mostrar en la pagina principal o dashboard
     public function reportes() {
         $data = [
+            //Aqui recibimos y obtenemos los datos necesarios para poder mostrar en ciertos espacios
             'titulo' => 'Reportes del Sistema',
             'fecha_inicio' => date('Y-m-01'), // Primer día del mes
             'fecha_fin' => date('Y-m-d'),     // Hoy
